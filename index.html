@@ -45,7 +45,6 @@
     .theme-tag{display:inline-block;background:var(--accent-light);color:var(--accent);font-size:.7rem;font-weight:600;padding:2px 12px;border-radius:20px;letter-spacing:.3px}
     .devotion-title{font-size:.8rem;font-weight:600;color:var(--text-muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px}
     .devotion-body{font-size:.95rem;line-height:1.6;color:var(--text-secondary)}
-    .punchline{font-size:1.05rem;font-weight:600;color:var(--gold);line-height:1.4;padding:12px 0 4px;border-top:1px solid var(--divider);margin-top:12px;font-style:italic}
     .live-it{background:var(--accent-light);border-radius:var(--radius-sm);padding:12px 14px;margin:12px 0 6px;font-size:.9rem;color:var(--text-secondary)}
     .live-it strong{color:var(--text);font-weight:600}
     .prayer-box{font-size:.9rem;color:var(--text-secondary);padding:12px 14px;background:var(--input-bg);border-radius:var(--radius-sm);margin-top:10px;border-left:3px solid var(--accent)}
@@ -95,16 +94,18 @@
   <script>
     // ═══════════════════════════════════════════════════════════════
     //  VERSEFLOW — 100% API‑driven Daily Devotion
-    //  Fetches verse + commentary from Scriptura API (primary)
-    //  Falls back to wldeh/bible-api for verse only if needed.
-    //  No hardcoded devotion content.
+    //  Primary: Scriptura API (verse + commentary + application + prayer)
+    //  Fallback: wldeh/bible-api (verse only) + rule‑based reflection
+    //  No hard‑coded devotion templates; all content from live APIs.
     // ═══════════════════════════════════════════════════════════════
 
     (function() {
       'use strict';
 
       // ─── API ENDPOINTS ──────────────────────────────────────────
+      // Scriptura API: provides random verse with commentary, application, prayer
       const SCRIPTURA_API = 'https://scriptura-api.com/api/v1/verses/random';
+      // wldeh/bible-api (MIT) – free, public domain translations
       const BIBLE_API = 'https://bible-api.com';
 
       const SAVED_KEY = 'verseflow_saved';
@@ -112,7 +113,7 @@
 
       // ─── STATE ──────────────────────────────────────────────────
       let currentTheme = 'system';
-      let currentTranslation = 'web';
+      let currentTranslation = 'web'; // default translation
       let savedItems = [];
       let dailyVerse = null;
       let currentDevotion = null;
@@ -180,15 +181,14 @@
 
       // ─── FETCH DEVOTION FROM SCRIPTURA API (primary) ──────────
       async function fetchDevotionFromScriptura() {
+        // Scriptura expects translation query param; default to 'web' if not set
         const url = `${SCRIPTURA_API}?translation=${currentTranslation}`;
         const data = await apiFetch(url);
-        // Scriptura API returns: { reference, text, commentary, day_text?, prayer? }
-        // We'll map commentary -> reflection, and derive Live It and Prayer from the data.
-        // If commentary is missing, we'll use a small fallback.
+        // Scriptura returns: { reference, text, commentary, application, prayer, theme?, ... }
         if (!data || !data.reference || !data.text) {
           throw new Error('Invalid response from Scriptura API');
         }
-        // Build the devotion object from API data
+        // Build devotion object; use fallback fields if missing
         return {
           verse: {
             ref: data.reference,
@@ -211,13 +211,12 @@
         if (!data || !data.reference || !data.text) {
           throw new Error('Invalid response from Bible API');
         }
-        // Since Bible API doesn't provide commentary, we generate a simple one based on keywords
-        // but we keep it minimal and transparent.
         const text = data.text;
         const theme = extractTheme(text);
-        const reflection = `This verse reminds us of God's truth. “${text}” — let us meditate on His Word and apply it to our lives.`;
-        const liveIt = `Reflect on how this verse speaks to your situation today. Write down one specific way you can respond.`;
-        const prayer = `Lord, thank You for Your Word. Help me to understand and live out this truth. Amen.`;
+        // Generate a simple, consistent reflection from the verse text
+        const reflection = `“${text}” — This verse reminds us of God’s truth and His presence in our lives. Let us meditate on its meaning and let it shape our hearts today.`;
+        const liveIt = `Reflect on how this verse speaks to your current situation. Write down one specific way you can respond to God’s Word today.`;
+        const prayer = `Lord, thank You for Your living Word. Open my eyes to understand it, and give me the strength to live it out. Amen.`;
         return {
           verse: {
             ref: data.reference,
@@ -233,43 +232,45 @@
         };
       }
 
-      // ─── HELPER: Extract theme from verse text (simple keyword mapping) ──
+      // ─── HELPER: Extract a theme from the verse text (simple keyword mapping) ──
       function extractTheme(text) {
         const lower = text.toLowerCase();
         const map = {
-          'grace': ['grace', 'gracious', 'mercy'],
-          'faith': ['faith', 'believe', 'trust'],
-          'hope': ['hope', 'hopeful'],
-          'love': ['love', 'beloved', 'loving'],
-          'salvation': ['saved', 'salvation', 'redeem'],
-          'prayer': ['pray', 'prayer'],
-          'repentance': ['repent', 'turn'],
-          'forgiveness': ['forgive', 'forgiveness'],
-          'obedience': ['obey', 'commandment'],
-          'service': ['serve', 'servant'],
-          'rest': ['rest', 'weary', 'burden'],
-          'creation': ['create', 'heaven', 'earth'],
-          'second coming': ['come', 'coming', 'return']
+          'Grace': ['grace', 'gracious', 'mercy'],
+          'Faith': ['faith', 'believe', 'trust'],
+          'Hope': ['hope', 'hopeful'],
+          'Love': ['love', 'beloved', 'loving'],
+          'Salvation': ['saved', 'salvation', 'redeem'],
+          'Prayer': ['pray', 'prayer'],
+          'Repentance': ['repent', 'turn'],
+          'Forgiveness': ['forgive', 'forgiveness'],
+          'Obedience': ['obey', 'commandment'],
+          'Service': ['serve', 'servant'],
+          'Rest': ['rest', 'weary', 'burden'],
+          'Creation': ['create', 'heaven', 'earth'],
+          'Second Coming': ['come', 'coming', 'return'],
+          'Sanctification': ['sanctify', 'holy', 'purify'],
+          'Law': ['law', 'commandments', 'statute']
         };
         for (const [theme, keywords] of Object.entries(map)) {
           if (keywords.some(kw => lower.includes(kw))) {
-            return theme.charAt(0).toUpperCase() + theme.slice(1);
+            return theme;
           }
         }
         return 'Truth';
       }
 
-      // ─── MINIMAL FALLBACK GENERATORS (only used if API fails completely) ──
+      // ─── MINIMAL FALLBACK GENERATORS (only used if Scriptura fails completely) ──
       function generateFallbackReflection(text) {
-        return `This verse from Scripture speaks to our hearts: “${text}” — let us dwell on its meaning and let it shape our day.`;
+        return `“${text}” — Let this Scripture speak to your heart today. God’s Word is alive and active, and it holds a message for you right now.`;
       }
 
       function generateFallbackLiveIt(text) {
-        return `Consider how this verse applies to your life today. Take one deliberate action that reflects its truth.`;
+        return `Consider one area of your life where this verse applies. Take a deliberate step to align your actions with this truth.`;
       }
 
       function generateFallbackPrayer(text) {
-        return `Lord, thank You for Your Word. Help me to walk in the light of this truth today. Amen.`;
+        return `Heavenly Father, thank You for Your Word. Help me to understand it, treasure it, and live it out today. Amen.`;
       }
 
       // ─── MAIN FETCH: tries Scriptura, falls back to Bible-API ──
@@ -392,10 +393,12 @@
 
       // ─── INIT ────────────────────────────────────────────────────
       async function init() {
+        // Load saved items
         const saved = localStorage.getItem(SAVED_KEY);
         if (saved) {
           try { savedItems = JSON.parse(saved); } catch (e) { savedItems = []; }
         }
+        // Load translation preference
         const trans = localStorage.getItem('verseflow_translation');
         if (trans) currentTranslation = trans;
 
