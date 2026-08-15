@@ -4,7 +4,6 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes" />
   <meta name="theme-color" content="#0a1a2b" />
-  <!-- Preconnect to API for faster DNS/connect -->
   <link rel="preconnect" href="https://bible-api.com" />
   <link rel="dns-prefetch" href="https://bible-api.com" />
   <title>VerseFlow — Daily Devotion</title>
@@ -94,15 +93,15 @@
 
   <script>
     // ═══════════════════════════════════════════════════════════════
-    //  VERSEFLOW — Daily Devotion (Ultra‑Fast)
-    //  Optimized for speed, compatibility, and minimal footprint.
+    //  VERSEFLOW — Daily Devotion (Thematically Aligned)
+    //  Picks devotion based on keywords in the verse text itself.
     // ═══════════════════════════════════════════════════════════════
 
     (function() {
       'use strict';
 
       // ─── CONSTANTS ──────────────────────────────────────────────
-      const API_BASE = 'https://bible-api.com'; // wldeh/bible-api (MIT)
+      const API_BASE = 'https://bible-api.com';
       const SAVED_KEY = 'verseflow_saved';
       const DAILY_KEY = 'verseflow_daily';
 
@@ -150,9 +149,8 @@
         applyTheme(next);
       });
 
-      // ─── API HELPERS (with fallback for older browsers) ──────
+      // ─── API HELPERS ────────────────────────────────────────────
       function apiFetch(url) {
-        // Use fetch if available, else fallback to XMLHttpRequest
         if (window.fetch) {
           return fetch(url).then(res => {
             if (!res.ok) throw new Error('API request failed');
@@ -215,7 +213,7 @@
         }
       }
 
-      // ─── DEVOTION GENERATOR (generic Christian) ────────────────
+      // ─── DEVOTION TEMPLATES (each has a theme and content) ─────
       const DEVOTION_TEMPLATES = [{
         theme: 'Grace',
         body: 'God’s grace is unearned and boundless. It reaches us in our lowest moments and lifts us to new life. “For by grace you have been saved through faith” (Ephesians 2:8).',
@@ -314,7 +312,46 @@
         prayer: 'Lord, help me to love your law and to walk in your ways. Amen.'
       }];
 
-      function getDevotionForVerse(verseRef) {
+      // ─── KEYWORD → THEME MAPPING ──────────────────────────────
+      const THEME_KEYWORDS = {
+        'grace': ['grace', 'gracious', 'mercy', 'merciful', 'kindness'],
+        'salvation': ['saved', 'salvation', 'redeem', 'redeemer', 'deliver'],
+        'faith': ['faith', 'believe', 'trust', 'confidence'],
+        'hope': ['hope', 'hopeful', 'expect'],
+        'love': ['love', 'beloved', 'loving', 'charity'],
+        'obedience': ['obey', 'obedience', 'commandment', 'law', 'keep'],
+        'prayer': ['pray', 'prayer', 'intercede'],
+        'repentance': ['repent', 'repentance', 'turn', 'forsake'],
+        'forgiveness': ['forgive', 'forgiveness', 'pardon'],
+        'service': ['serve', 'servant', 'service', 'minister'],
+        'discipleship': ['disciple', 'follow', 'learn'],
+        'rest': ['rest', 'weary', 'burden', 'refresh'],
+        'creation': ['create', 'creation', 'heaven', 'earth', 'world', 'made'],
+        'second coming': ['come', 'coming', 'return', 'appear'],
+        'sanctification': ['sanctify', 'sanctification', 'holy', 'purify', 'cleanse'],
+        'law': ['law', 'commandments', 'statute', 'precept']
+      };
+
+      // ─── SELECT DEVOTION BASED ON VERSE TEXT ──────────────────
+      function getDevotionForVerse(verseRef, verseText) {
+        const lowerText = verseText.toLowerCase();
+        let matchedTheme = null;
+
+        // Search for keywords in the verse text
+        for (const [theme, keywords] of Object.entries(THEME_KEYWORDS)) {
+          if (keywords.some(kw => lowerText.includes(kw))) {
+            matchedTheme = theme;
+            break;
+          }
+        }
+
+        // If a theme is found, pick the first template with that theme
+        if (matchedTheme) {
+          const template = DEVOTION_TEMPLATES.find(t => t.theme.toLowerCase() === matchedTheme);
+          if (template) return template;
+        }
+
+        // Fallback: use hash-based selection (old method)
         const seed = verseRef.split(' ').join('').split(':').join('');
         let hash = 0;
         for (let i = 0; i < seed.length; i++) {
@@ -342,7 +379,7 @@
           showToast('Saved!');
         }
         localStorage.setItem(SAVED_KEY, JSON.stringify(savedItems));
-        renderDevotion(); // refresh to update button state
+        renderDevotion();
       }
 
       // ─── SHARE ──────────────────────────────────────────────────
@@ -365,7 +402,8 @@
             `<div class="card"><p>Unable to load devotion. Please check your connection.</p><button class="btn btn-primary" onclick="location.reload()">Retry</button></div>`;
           return;
         }
-        const devotion = getDevotionForVerse(verse.ref);
+        // Pass verse text for keyword matching
+        const devotion = getDevotionForVerse(verse.ref, verse.text);
         currentDevotion = devotion;
         const isSaved = savedItems.some(s => s.ref === verse.ref);
         const today = new Date().toLocaleDateString(undefined, { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
@@ -406,7 +444,7 @@
         initTheme();
         await renderDevotion();
 
-        console.log('🌊 VerseFlow — Daily Devotion ready (ultra‑fast)');
+        console.log('🌊 VerseFlow — Thematically unified daily devotion ready.');
       }
 
       document.addEventListener('DOMContentLoaded', init);
