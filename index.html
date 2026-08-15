@@ -4,752 +4,69 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes" />
   <meta name="theme-color" content="#0a1a2b" />
-  <title>VerseFlow — Daily Bible & Devotion</title>
+  <!-- Preconnect to API for faster DNS/connect -->
+  <link rel="preconnect" href="https://bible-api.com" />
+  <link rel="dns-prefetch" href="https://bible-api.com" />
+  <title>VerseFlow — Daily Devotion</title>
   <style>
     /* ── RESET & BASE ── */
-    *,
-    *::before,
-    *::after {
-      box-sizing: border-box;
-      margin: 0;
-      padding: 0;
-    }
-    :root {
-      --font: 'Segoe UI', system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
-      --radius: 16px;
-      --radius-sm: 10px;
-      --shadow: 0 8px 32px rgba(0, 0, 0, 0.08);
-      --transition: 0.25s ease;
-      --max-w: 560px;
-      --nav-h: 68px;
-      --top-h: 56px;
-    }
-    [data-theme="light"] {
-      --bg: #f8f6f0;
-      --bg-card: #ffffff;
-      --bg-nav: rgba(255, 255, 255, 0.88);
-      --text: #1a1f2e;
-      --text-secondary: #3d4459;
-      --text-muted: #6e768a;
-      --border: #e8e4da;
-      --accent: #FF9900;        /* Amazon orange */
-      --accent-light: #FFF0E0;
-      --gold: #D9822B;
-      --gold-light: #fce4d6;
-      --input-bg: #f0ede6;
-      --verse-bg: #fcfaf5;
-      --divider: #e8e4da;
-    }
-    [data-theme="dark"] {
-      --bg: #0d1421;
-      --bg-card: #162033;
-      --bg-nav: rgba(13, 20, 33, 0.92);
-      --text: #eae8e0;
-      --text-secondary: #b8b8b0;
-      --text-muted: #7a7a8a;
-      --border: #2a3348;
-      --accent: #FF9900;
-      --accent-light: #332211;
-      --gold: #FFB347;
-      --gold-light: #2a2218;
-      --input-bg: #1a2438;
-      --verse-bg: #111d30;
-      --divider: #2a3348;
-    }
-    html {
-      font-size: 16px;
-      scroll-behavior: smooth;
-      -webkit-tap-highlight-color: transparent;
-    }
-    body {
-      font-family: var(--font);
-      background: var(--bg);
-      color: var(--text);
-      transition: background var(--transition), color var(--transition);
-      min-height: 100vh;
-      min-height: 100dvh;
-      padding: 0;
-      margin: 0;
-      padding-bottom: var(--nav-h);
-      padding-top: var(--top-h);
-      overflow-x: hidden;
-      line-height: 1.5;
-    }
-    ::-webkit-scrollbar {
-      width: 4px;
-      height: 4px;
-    }
-    ::-webkit-scrollbar-thumb {
-      background: var(--text-muted);
-      border-radius: 4px;
-    }
-    button {
-      font-family: inherit;
-      font-size: inherit;
-      cursor: pointer;
-      border: none;
-      background: none;
-      color: inherit;
-      touch-action: manipulation;
-    }
-    input,
-    select {
-      font-family: inherit;
-      font-size: inherit;
-      border: none;
-      background: none;
-      color: inherit;
-      outline: none;
-    }
-    svg {
-      display: block;
-      max-width: 100%;
-      fill: currentColor;
-    }
+    *{margin:0;padding:0;box-sizing:border-box}
+    :root{--font:system-ui,-apple-system,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;--radius:16px;--radius-sm:10px;--shadow:0 8px 32px rgba(0,0,0,0.08);--transition:0.25s ease;--max-w:560px;--top-h:56px}
+    [data-theme="light"]{--bg:#f8f6f0;--bg-card:#ffffff;--bg-nav:rgba(255,255,255,0.88);--text:#1a1f2e;--text-secondary:#3d4459;--text-muted:#6e768a;--border:#e8e4da;--accent:#FF9900;--accent-light:#FFF0E0;--gold:#D9822B;--gold-light:#fce4d6;--input-bg:#f0ede6;--verse-bg:#fcfaf5;--divider:#e8e4da}
+    [data-theme="dark"]{--bg:#0d1421;--bg-card:#162033;--bg-nav:rgba(13,20,33,0.92);--text:#eae8e0;--text-secondary:#b8b8b0;--text-muted:#7a7a8a;--border:#2a3348;--accent:#FF9900;--accent-light:#332211;--gold:#FFB347;--gold-light:#2a2218;--input-bg:#1a2438;--verse-bg:#111d30;--divider:#2a3348}
+    html{font-size:16px;scroll-behavior:smooth;-webkit-tap-highlight-color:transparent}
+    body{font-family:var(--font);background:var(--bg);color:var(--text);transition:background var(--transition),color var(--transition);min-height:100vh;min-height:100dvh;padding:0;margin:0;padding-top:var(--top-h);padding-bottom:20px;overflow-x:hidden;line-height:1.5;-webkit-font-smoothing:antialiased}
+    ::-webkit-scrollbar{width:4px;height:4px}
+    ::-webkit-scrollbar-thumb{background:var(--text-muted);border-radius:4px}
+    button{font:inherit;cursor:pointer;border:none;background:none;color:inherit;touch-action:manipulation}
+    svg{display:block;max-width:100%;fill:currentColor}
 
     /* ── TOP BAR ── */
-    .top-bar {
-      position: fixed;
-      top: 0;
-      left: 0;
-      right: 0;
-      height: var(--top-h);
-      background: var(--bg-nav);
-      backdrop-filter: blur(16px);
-      -webkit-backdrop-filter: blur(16px);
-      border-bottom: 1px solid var(--border);
-      z-index: 100;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      padding: 0 16px;
-      transition: background var(--transition), border-color var(--transition);
-    }
-    .top-bar .logo {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      font-weight: 700;
-      font-size: 1.1rem;
-      letter-spacing: -0.3px;
-    }
-    .top-bar .logo svg {
-      width: 28px;
-      height: 28px;
-      fill: var(--accent);
-    }
-    .top-bar .logo span {
-      background: linear-gradient(135deg, var(--accent), var(--gold));
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
-      background-clip: text;
-    }
-    .top-actions {
-      display: flex;
-      gap: 6px;
-      align-items: center;
-    }
-    .top-actions button {
-      width: 38px;
-      height: 38px;
-      border-radius: 50%;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      background: var(--input-bg);
-      transition: background var(--transition), transform 0.15s;
-      color: var(--text-secondary);
-    }
-    .top-actions button:active {
-      transform: scale(0.92);
-    }
-    .top-actions button svg {
-      width: 20px;
-      height: 20px;
-    }
+    .top-bar{position:fixed;top:0;left:0;right:0;height:var(--top-h);background:var(--bg-nav);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);border-bottom:1px solid var(--border);z-index:100;display:flex;align-items:center;justify-content:space-between;padding:0 16px;transition:background var(--transition),border-color var(--transition)}
+    .top-bar .logo{display:flex;align-items:center;gap:8px;font-weight:700;font-size:1.1rem;letter-spacing:-0.3px}
+    .top-bar .logo svg{width:28px;height:28px;fill:var(--accent)}
+    .top-bar .logo span{background:linear-gradient(135deg,var(--accent),var(--gold));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+    .top-actions{display:flex;gap:6px;align-items:center}
+    .top-actions button{width:38px;height:38px;border-radius:50%;display:flex;align-items:center;justify-content:center;background:var(--input-bg);transition:background var(--transition),transform 0.15s;color:var(--text-secondary)}
+    .top-actions button:active{transform:scale(0.92)}
+    .top-actions button svg{width:20px;height:20px}
 
-    /* ── BOTTOM NAV ── */
-    .bottom-nav {
-      position: fixed;
-      bottom: 0;
-      left: 0;
-      right: 0;
-      height: var(--nav-h);
-      background: var(--bg-nav);
-      backdrop-filter: blur(16px);
-      -webkit-backdrop-filter: blur(16px);
-      border-top: 1px solid var(--border);
-      z-index: 100;
-      display: flex;
-      align-items: stretch;
-      justify-content: space-around;
-      padding: 0 4px;
-      transition: background var(--transition), border-color var(--transition);
-    }
-    .bottom-nav button {
-      flex: 1;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      gap: 2px;
-      font-size: 0.6rem;
-      font-weight: 500;
-      color: var(--text-muted);
-      transition: color var(--transition);
-      padding: 4px 0;
-      border-radius: var(--radius-sm);
-      position: relative;
-      letter-spacing: 0.3px;
-    }
-    .bottom-nav button svg {
-      width: 24px;
-      height: 24px;
-      transition: fill var(--transition);
-    }
-    .bottom-nav button.active {
-      color: var(--accent);
-    }
-    .bottom-nav button.active svg {
-      fill: var(--accent);
-    }
-    .bottom-nav button .badge-dot {
-      position: absolute;
-      top: 6px;
-      right: 50%;
-      transform: translateX(18px);
-      width: 8px;
-      height: 8px;
-      border-radius: 50%;
-      background: var(--gold);
-      border: 2px solid var(--bg-nav);
-    }
-    .bottom-nav button span {
-      line-height: 1;
-    }
-
-    /* ── MAIN CONTAINER ── */
-    .app-container {
-      max-width: var(--max-w);
-      margin: 0 auto;
-      padding: 12px 16px 20px;
-    }
-    .page {
-      display: none;
-      animation: fadeUp 0.3s ease;
-    }
-    .page.active {
-      display: block;
-    }
-    @keyframes fadeUp {
-      from {
-        opacity: 0;
-        transform: translateY(12px);
-      }
-      to {
-        opacity: 1;
-        transform: translateY(0);
-      }
-    }
+    /* ── MAIN ── */
+    .app-container{max-width:var(--max-w);margin:0 auto;padding:12px 16px 20px}
 
     /* ── CARDS ── */
-    .card {
-      background: var(--bg-card);
-      border-radius: var(--radius);
-      padding: 20px 18px;
-      box-shadow: var(--shadow);
-      border: 1px solid var(--border);
-      transition: background var(--transition), border-color var(--transition), box-shadow var(--transition);
-      margin-bottom: 16px;
-    }
-    .card-verse {
-      background: var(--verse-bg);
-      border-left: 4px solid var(--accent);
-    }
-    .card-gold {
-      border-left: 4px solid var(--gold);
-    }
+    .card{background:var(--bg-card);border-radius:var(--radius);padding:20px 18px;box-shadow:var(--shadow);border:1px solid var(--border);transition:background var(--transition),border-color var(--transition),box-shadow var(--transition);margin-bottom:16px}
+    .card-verse{background:var(--verse-bg);border-left:4px solid var(--accent)}
+    .card-gold{border-left:4px solid var(--gold)}
 
     /* ── TYPOGRAPHY ── */
-    .verse-ref {
-      font-size: 0.75rem;
-      font-weight: 600;
-      color: var(--accent);
-      letter-spacing: 0.5px;
-      text-transform: uppercase;
-      margin-bottom: 4px;
-    }
-    .verse-text {
-      font-size: 1.05rem;
-      line-height: 1.6;
-      font-weight: 400;
-      color: var(--text);
-    }
-    .theme-tag {
-      display: inline-block;
-      background: var(--accent-light);
-      color: var(--accent);
-      font-size: 0.7rem;
-      font-weight: 600;
-      padding: 2px 12px;
-      border-radius: 20px;
-      letter-spacing: 0.3px;
-    }
-    .devotion-title {
-      font-size: 0.8rem;
-      font-weight: 600;
-      color: var(--text-muted);
-      text-transform: uppercase;
-      letter-spacing: 0.5px;
-      margin-bottom: 4px;
-    }
-    .devotion-body {
-      font-size: 0.95rem;
-      line-height: 1.6;
-      color: var(--text-secondary);
-    }
-    .punchline {
-      font-size: 1.05rem;
-      font-weight: 600;
-      color: var(--gold);
-      line-height: 1.4;
-      padding: 12px 0 4px;
-      border-top: 1px solid var(--divider);
-      margin-top: 12px;
-      font-style: italic;
-    }
-    .live-it {
-      background: var(--accent-light);
-      border-radius: var(--radius-sm);
-      padding: 12px 14px;
-      margin: 12px 0 6px;
-      font-size: 0.9rem;
-      color: var(--text-secondary);
-    }
-    .live-it strong {
-      color: var(--text);
-      font-weight: 600;
-    }
-    .discuss-q {
-      font-size: 0.9rem;
-      color: var(--text-secondary);
-      padding: 10px 14px;
-      background: var(--input-bg);
-      border-radius: var(--radius-sm);
-      margin-top: 10px;
-    }
-    .discuss-q strong {
-      color: var(--text);
-    }
+    .verse-ref{font-size:.75rem;font-weight:600;color:var(--accent);letter-spacing:.5px;text-transform:uppercase;margin-bottom:4px}
+    .verse-text{font-size:1.05rem;line-height:1.6;font-weight:400;color:var(--text)}
+    .theme-tag{display:inline-block;background:var(--accent-light);color:var(--accent);font-size:.7rem;font-weight:600;padding:2px 12px;border-radius:20px;letter-spacing:.3px}
+    .devotion-title{font-size:.8rem;font-weight:600;color:var(--text-muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px}
+    .devotion-body{font-size:.95rem;line-height:1.6;color:var(--text-secondary)}
+    .punchline{font-size:1.05rem;font-weight:600;color:var(--gold);line-height:1.4;padding:12px 0 4px;border-top:1px solid var(--divider);margin-top:12px;font-style:italic}
+    .live-it{background:var(--accent-light);border-radius:var(--radius-sm);padding:12px 14px;margin:12px 0 6px;font-size:.9rem;color:var(--text-secondary)}
+    .live-it strong{color:var(--text);font-weight:600}
+    .prayer-box{font-size:.9rem;color:var(--text-secondary);padding:12px 14px;background:var(--input-bg);border-radius:var(--radius-sm);margin-top:10px;border-left:3px solid var(--accent)}
+    .prayer-box strong{color:var(--text);font-weight:600}
 
     /* ── BUTTONS ── */
-    .btn-group {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 8px;
-      margin-top: 14px;
-    }
-    .btn {
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      gap: 6px;
-      padding: 10px 18px;
-      border-radius: var(--radius-sm);
-      font-weight: 600;
-      font-size: 0.85rem;
-      transition: all var(--transition);
-      background: var(--input-bg);
-      color: var(--text-secondary);
-      border: 1px solid var(--border);
-      flex: 1 1 auto;
-      min-height: 44px;
-    }
-    .btn:active {
-      transform: scale(0.96);
-    }
-    .btn-primary {
-      background: var(--accent);
-      color: #fff;
-      border-color: var(--accent);
-    }
-    .btn-gold {
-      background: var(--gold);
-      color: #fff;
-      border-color: var(--gold);
-    }
-    .btn-outline {
-      background: transparent;
-      border-color: var(--border);
-    }
-    .btn-icon {
-      width: 44px;
-      height: 44px;
-      padding: 0;
-      border-radius: 50%;
-      flex: 0 0 auto;
-    }
-    .btn svg {
-      width: 18px;
-      height: 18px;
-      fill: currentColor;
-      flex-shrink: 0;
-    }
-
-    /* ── SEARCH ── */
-    .search-wrap {
-      position: relative;
-      margin-bottom: 16px;
-    }
-    .search-wrap input {
-      width: 100%;
-      padding: 14px 16px 14px 48px;
-      border-radius: var(--radius);
-      background: var(--input-bg);
-      border: 1px solid var(--border);
-      color: var(--text);
-      font-size: 0.95rem;
-      transition: border var(--transition), box-shadow var(--transition);
-      min-height: 52px;
-    }
-    .search-wrap input:focus {
-      border-color: var(--accent);
-      box-shadow: 0 0 0 3px rgba(255, 153, 0, 0.2);
-    }
-    .search-wrap .search-icon {
-      position: absolute;
-      left: 16px;
-      top: 50%;
-      transform: translateY(-50%);
-      color: var(--text-muted);
-      pointer-events: none;
-    }
-    .search-wrap .search-icon svg {
-      width: 20px;
-      height: 20px;
-    }
-    .search-results {
-      max-height: 420px;
-      overflow-y: auto;
-    }
-    .search-result {
-      padding: 12px 14px;
-      border-bottom: 1px solid var(--divider);
-      cursor: pointer;
-      transition: background var(--transition);
-      border-radius: 4px;
-    }
-    .search-result:active {
-      background: var(--input-bg);
-    }
-    .search-result .ref {
-      font-weight: 600;
-      color: var(--accent);
-      font-size: 0.8rem;
-    }
-    .search-result .text {
-      font-size: 0.9rem;
-      color: var(--text-secondary);
-      margin-top: 2px;
-      display: -webkit-box;
-      -webkit-line-clamp: 2;
-      -webkit-box-orient: vertical;
-      overflow: hidden;
-    }
-
-    /* ── BIBLE READER ── */
-    .bible-nav {
-      display: flex;
-      gap: 6px;
-      flex-wrap: wrap;
-      margin-bottom: 14px;
-    }
-    .bible-nav select {
-      flex: 1;
-      min-width: 100px;
-      padding: 10px 12px;
-      border-radius: var(--radius-sm);
-      background: var(--input-bg);
-      border: 1px solid var(--border);
-      color: var(--text);
-      font-size: 0.9rem;
-      appearance: none;
-      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%236e768a' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");
-      background-repeat: no-repeat;
-      background-position: right 12px center;
-      padding-right: 36px;
-    }
-    .bible-nav select:focus {
-      border-color: var(--accent);
-    }
-    .bible-nav .btn {
-      flex: 0 0 auto;
-      padding: 10px 14px;
-    }
-    .chapter-text .v {
-      display: block;
-      padding: 6px 0;
-      border-bottom: 1px solid var(--divider);
-      font-size: 0.92rem;
-      line-height: 1.6;
-      color: var(--text-secondary);
-    }
-    .chapter-text .v .num {
-      color: var(--text-muted);
-      font-weight: 600;
-      font-size: 0.7rem;
-      display: inline-block;
-      width: 28px;
-      text-align: right;
-      margin-right: 8px;
-      user-select: none;
-    }
-    .chapter-text .v .text {
-      color: var(--text);
-    }
-
-    /* ── SAVED ── */
-    .saved-item {
-      padding: 14px 0;
-      border-bottom: 1px solid var(--divider);
-    }
-    .saved-item:last-child {
-      border-bottom: none;
-    }
-    .saved-item .ref {
-      font-weight: 600;
-      color: var(--accent);
-      font-size: 0.8rem;
-    }
-    .saved-item .text {
-      font-size: 0.92rem;
-      color: var(--text-secondary);
-      margin: 4px 0 6px;
-    }
-    .saved-item .actions {
-      display: flex;
-      gap: 8px;
-      margin-top: 6px;
-    }
-    .saved-item .actions button {
-      font-size: 0.75rem;
-      padding: 4px 12px;
-      border-radius: 20px;
-      background: var(--input-bg);
-      color: var(--text-muted);
-      border: 1px solid var(--border);
-      transition: all var(--transition);
-    }
-    .saved-item .actions button:active {
-      transform: scale(0.94);
-    }
-
-    /* ── SETTINGS ── */
-    .setting-row {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      padding: 12px 0;
-      border-bottom: 1px solid var(--divider);
-    }
-    .setting-row:last-child {
-      border-bottom: none;
-    }
-    .setting-row .label {
-      font-weight: 500;
-      font-size: 0.9rem;
-    }
-    .setting-row .desc {
-      font-size: 0.8rem;
-      color: var(--text-muted);
-    }
-    .toggle-wrap {
-      display: flex;
-      gap: 6px;
-      background: var(--input-bg);
-      border-radius: var(--radius-sm);
-      padding: 3px;
-      border: 1px solid var(--border);
-    }
-    .toggle-wrap button {
-      padding: 6px 14px;
-      border-radius: 6px;
-      font-size: 0.75rem;
-      font-weight: 600;
-      color: var(--text-muted);
-      transition: all var(--transition);
-    }
-    .toggle-wrap button.active {
-      background: var(--accent);
-      color: #fff;
-      box-shadow: 0 2px 8px rgba(255, 153, 0, 0.3);
-    }
-    .license-text {
-      font-size: 0.75rem;
-      color: var(--text-muted);
-      line-height: 1.6;
-      padding: 8px 0;
-    }
-    .license-text strong {
-      color: var(--text);
-    }
-
-    /* ── DISCOVER ── */
-    .belief-card {
-      padding: 14px 16px;
-      border-radius: var(--radius-sm);
-      background: var(--input-bg);
-      margin-bottom: 8px;
-      border-left: 3px solid var(--gold);
-      transition: background var(--transition);
-    }
-    .belief-card .num {
-      font-weight: 700;
-      color: var(--gold);
-      font-size: 0.8rem;
-    }
-    .belief-card .title {
-      font-weight: 600;
-      font-size: 0.9rem;
-      margin: 2px 0;
-    }
-    .belief-card .desc {
-      font-size: 0.82rem;
-      color: var(--text-secondary);
-    }
-
-    /* ── STUDY MODE ── */
-    .study-section {
-      margin-top: 14px;
-      padding-top: 14px;
-      border-top: 1px solid var(--divider);
-    }
-    .study-section .label {
-      font-weight: 600;
-      font-size: 0.75rem;
-      text-transform: uppercase;
-      letter-spacing: 0.5px;
-      color: var(--text-muted);
-      margin-bottom: 6px;
-    }
-    .study-section .content {
-      font-size: 0.9rem;
-      color: var(--text-secondary);
-      line-height: 1.6;
-    }
-    .study-section .content a {
-      color: var(--accent);
-      text-decoration: none;
-      font-weight: 500;
-    }
-    .study-section .content a:hover {
-      text-decoration: underline;
-    }
-
-    /* ── EMPTY STATE ── */
-    .empty-state {
-      text-align: center;
-      padding: 40px 20px;
-      color: var(--text-muted);
-    }
-    .empty-state svg {
-      width: 56px;
-      height: 56px;
-      fill: var(--text-muted);
-      opacity: 0.3;
-      margin: 0 auto 12px;
-    }
-    .empty-state .title {
-      font-weight: 600;
-      font-size: 1rem;
-      color: var(--text);
-    }
+    .btn-group{display:flex;flex-wrap:wrap;gap:8px;margin-top:14px}
+    .btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;padding:10px 18px;border-radius:var(--radius-sm);font-weight:600;font-size:.85rem;transition:all var(--transition);background:var(--input-bg);color:var(--text-secondary);border:1px solid var(--border);flex:1 1 auto;min-height:44px}
+    .btn:active{transform:scale(0.96)}
+    .btn-primary{background:var(--accent);color:#fff;border-color:var(--accent)}
+    .btn-outline{background:transparent;border-color:var(--border)}
+    .btn svg{width:18px;height:18px;fill:currentColor;flex-shrink:0}
 
     /* ── TOAST ── */
-    .toast {
-      position: fixed;
-      bottom: calc(var(--nav-h) + 20px);
-      left: 50%;
-      transform: translateX(-50%) translateY(20px);
-      background: var(--bg-card);
-      color: var(--text);
-      padding: 12px 24px;
-      border-radius: var(--radius-sm);
-      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
-      border: 1px solid var(--border);
-      font-size: 0.85rem;
-      font-weight: 500;
-      opacity: 0;
-      pointer-events: none;
-      transition: all 0.35s ease;
-      z-index: 200;
-      max-width: 90%;
-      text-align: center;
-    }
-    .toast.show {
-      opacity: 1;
-      transform: translateX(-50%) translateY(0);
-      pointer-events: auto;
-    }
+    .toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%) translateY(20px);background:var(--bg-card);color:var(--text);padding:12px 24px;border-radius:var(--radius-sm);box-shadow:0 8px 32px rgba(0,0,0,0.2);border:1px solid var(--border);font-size:.85rem;font-weight:500;opacity:0;pointer-events:none;transition:all 0.35s ease;z-index:200;max-width:90%;text-align:center}
+    .toast.show{opacity:1;transform:translateX(-50%) translateY(0);pointer-events:auto}
 
     /* ── RESPONSIVE ── */
-    @media (max-width:400px) {
-      .card {
-        padding: 16px 14px;
-      }
-      .verse-text {
-        font-size: 0.98rem;
-      }
-      .btn {
-        font-size: 0.8rem;
-        padding: 8px 14px;
-        min-height: 40px;
-      }
-      .bottom-nav button {
-        font-size: 0.55rem;
-      }
-      .bottom-nav button svg {
-        width: 20px;
-        height: 20px;
-      }
-    }
-    @media (min-width:768px) {
-      :root {
-        --max-w: 640px;
-      }
-      .card {
-        padding: 28px 32px;
-        border-radius: 20px;
-      }
-      .verse-text {
-        font-size: 1.15rem;
-      }
-    }
-
-    .mt-8 {
-      margin-top: 8px;
-    }
-    .mt-12 {
-      margin-top: 12px;
-    }
-    .mt-16 {
-      margin-top: 16px;
-    }
-    .flex {
-      display: flex;
-    }
-    .gap-8 {
-      gap: 8px;
-    }
-    .text-center {
-      text-align: center;
-    }
-    .w-full {
-      width: 100%;
-    }
-    .hidden {
-      display: none !important;
-    }
+    @media(max-width:400px){.card{padding:16px 14px}.verse-text{font-size:.98rem}.btn{font-size:.8rem;padding:8px 14px;min-height:40px}}
+    @media(min-width:768px){:root{--max-w:640px}.card{padding:28px 32px;border-radius:20px}.verse-text{font-size:1.15rem}}
+    .mt-8{margin-top:8px}.mt-12{margin-top:12px}.flex{display:flex}.gap-8{gap:8px}.text-center{text-align:center}.hidden{display:none!important}
   </style>
 </head>
 <body>
@@ -769,135 +86,16 @@
 
   <!-- MAIN -->
   <main class="app-container" role="main">
-
-    <!-- HOME -->
-    <section id="page-home" class="page active" role="tabpanel">
-      <div id="homeContent"><!-- rendered by JS --></div>
-    </section>
-
-    <!-- BIBLE -->
-    <section id="page-bible" class="page" role="tabpanel">
-      <div class="search-wrap">
-        <span class="search-icon"><svg viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27A6.471 6.471 0 0016 9.5 6.5 6.5 0 109.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/></svg></span>
-        <input type="text" id="bibleSearchInput" placeholder="Search the Bible… (e.g. John 3:16, faith)" autocomplete="off" />
-      </div>
-      <div id="bibleSearchResults"></div>
-      <div id="bibleReader">
-        <div class="bible-nav">
-          <select id="bookSelect"></select>
-          <select id="chapterSelect"></select>
-          <button class="btn btn-primary" id="goToChapter">Read</button>
-        </div>
-        <div id="chapterDisplay" class="card card-verse">
-          <div class="verse-ref" id="chapterRef">Loading…</div>
-          <div class="chapter-text" id="chapterText"></div>
-        </div>
-      </div>
-    </section>
-
-    <!-- DISCOVER -->
-    <section id="page-discover" class="page" role="tabpanel">
-      <div class="card">
-        <h3 style="font-size:1rem;font-weight:700;margin-bottom:8px;">28 Fundamental Beliefs</h3>
-        <p style="font-size:0.85rem;color:var(--text-muted);margin-bottom:14px;">Adventist theological foundations for daily life.</p>
-        <div id="beliefsList"></div>
-      </div>
-      <div class="card">
-        <h3 style="font-size:1rem;font-weight:700;margin-bottom:8px;">Study Tools</h3>
-        <div class="btn-group">
-          <button class="btn btn-outline" id="randomVerseBtn">📖 Random Verse</button>
-          <button class="btn btn-outline" id="topicSearchBtn">🔍 Search by Topic</button>
-        </div>
-        <div id="topicSearchArea" class="mt-12 hidden">
-          <input type="text" id="topicInput" placeholder="Enter a topic…" style="width:100%;padding:12px 14px;border-radius:var(--radius-sm);background:var(--input-bg);border:1px solid var(--border);color:var(--text);font-size:0.9rem;" />
-          <div class="btn-group mt-8"><button class="btn btn-primary" id="topicGoBtn">Find Verses</button></div>
-          <div id="topicResults" class="mt-8"></div>
-        </div>
-      </div>
-    </section>
-
-    <!-- SAVED -->
-    <section id="page-saved" class="page" role="tabpanel">
-      <div class="card">
-        <h3 style="font-size:1rem;font-weight:700;margin-bottom:4px;">Saved</h3>
-        <p style="font-size:0.8rem;color:var(--text-muted);margin-bottom:12px;">Verses and devotions you've saved.</p>
-        <div id="savedList"></div>
-        <div id="savedEmpty" class="empty-state">
-          <svg viewBox="0 0 24 24"><path d="M17 3H7c-1.1 0-2 .9-2 2v16l7-3 7 3V5c0-1.1-.9-2-2-2z"/></svg>
-          <div class="title">Nothing saved yet</div>
-          <p style="font-size:0.85rem;">Tap the bookmark on any devotion to save it.</p>
-        </div>
-      </div>
-    </section>
-
-    <!-- SETTINGS -->
-    <section id="page-settings" class="page" role="tabpanel">
-      <div class="card">
-        <h3 style="font-size:1rem;font-weight:700;margin-bottom:12px;">Appearance</h3>
-        <div class="setting-row">
-          <div><div class="label">Theme</div><div class="desc">Light · Dark · System</div></div>
-          <div class="toggle-wrap" id="themeToggleGroup">
-            <button data-theme="light">☀</button>
-            <button data-theme="dark">🌙</button>
-            <button data-theme="system">💻</button>
-          </div>
-        </div>
-      </div>
-      <div class="card">
-        <h3 style="font-size:1rem;font-weight:700;margin-bottom:12px;">Bible Data</h3>
-        <div class="setting-row">
-          <div><div class="label">Translation</div><div class="desc">Select version</div></div>
-          <select id="translationSelect" style="background:var(--input-bg);border:1px solid var(--border);border-radius:var(--radius-sm);padding:6px 12px;color:var(--text);font-size:0.85rem;">
-            <option value="web">WEB (Public Domain)</option>
-            <option value="kjv">KJV (Public Domain)</option>
-            <option value="asv">ASV (Public Domain)</option>
-            <option value="ylt">YLT (Public Domain)</option>
-            <option value="bbe">BBE (Public Domain)</option>
-          </select>
-        </div>
-        <div class="license-text">
-          <strong>Powered by wldeh/bible-api</strong> (MIT License)<br />
-          <span style="font-size:0.7rem;">Open-source Bible API with 200+ translations.<br />
-          Source: <a href="https://github.com/wldeh/bible-api" target="_blank" rel="noopener">github.com/wldeh/bible-api</a></span>
-        </div>
-        <div class="license-text">
-          <strong>Attribution</strong><br />
-          Bible texts are in the public domain or freely licensed.<br />
-          See <a href="https://bible-api.com/" target="_blank" rel="noopener">bible-api.com</a> for details.
-        </div>
-      </div>
-      <div class="card">
-        <h3 style="font-size:1rem;font-weight:700;margin-bottom:8px;">About</h3>
-        <p style="font-size:0.85rem;color:var(--text-secondary);line-height:1.6;">
-          VerseFlow delivers a fresh Bible verse and devotion every day.
-          Powered by open Bible APIs. No account, no tracking.
-          <br /><br />
-          <em>“One verse. One truth. One step closer to Christ.”</em>
-        </p>
-        <div class="btn-group mt-8">
-          <button class="btn btn-outline" id="clearAllBtn" style="color:#c0392b;border-color:#c0392b40;">Clear Saved Data</button>
-        </div>
-      </div>
-    </section>
-
+    <div id="devotionContent"><!-- rendered by JS --></div>
   </main>
-
-  <!-- BOTTOM NAV -->
-  <nav class="bottom-nav" role="tablist">
-    <button class="active" data-page="home" role="tab" aria-selected="true"><svg viewBox="0 0 24 24"><path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/></svg><span>Home</span></button>
-    <button data-page="bible" role="tab" aria-selected="false"><svg viewBox="0 0 24 24"><path d="M4 6h16v12H4z"/><path d="M8 4v2h8V4z"/><path d="M12 8v8"/><path d="M8 12h8"/></svg><span>Bible</span></button>
-    <button data-page="discover" role="tab" aria-selected="false"><svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 17.93c-3.95-.49-7-3.85-7-7.93 0-.62.08-1.21.21-1.79L9 15v1c0 1.1.9 2 2 2v1.93zm6.9-2.54c-.26-.81-1-1.39-1.9-1.39h-1v-3c0-.55-.45-1-1-1H8v-2h2c.55 0 1-.45 1-1V7h2c1.1 0 2-.9 2-2v-.41c2.93 1.19 5 4.06 5 7.41 0 2.08-.8 3.97-2.1 5.39z"/></svg><span>Discover</span></button>
-    <button data-page="saved" role="tab" aria-selected="false"><svg viewBox="0 0 24 24"><path d="M17 3H7c-1.1 0-2 .9-2 2v16l7-3 7 3V5c0-1.1-.9-2-2-2z"/></svg><span>Saved</span><span class="badge-dot hidden" id="savedBadge"></span></button>
-    <button data-page="settings" role="tab" aria-selected="false"><svg viewBox="0 0 24 24"><path d="M19.14 12.94c.04-.3.06-.61.06-.94 0-.32-.02-.64-.07-.94l2.03-1.58c.18-.14.23-.41.12-.61l-1.92-3.32c-.12-.22-.37-.29-.59-.22l-2.39.96c-.5-.38-1.03-.7-1.62-.94l-.36-2.54c-.04-.24-.24-.41-.48-.41h-3.84c-.24 0-.43.17-.47.41l-.36 2.54c-.59.24-1.13.57-1.62.94l-2.39-.96c-.22-.08-.47 0-.59.22L2.74 8.87c-.12.21-.08.47.12.61l2.03 1.58c-.05.3-.07.62-.07.94s.02.64.07.94l-2.03 1.58c-.18.14-.23.41-.12.61l1.92 3.32c.12.22.37.29.59.22l2.39-.96c.5.38 1.03.7 1.62.94l.36 2.54c.05.24.24.41.48.41h3.84c.24 0 .44-.17.47-.41l.36-2.54c.59-.24 1.13-.56 1.62-.94l2.39.96c.22.08.47 0 .59-.22l1.92-3.32c.12-.22.07-.47-.12-.61l-2.01-1.58zM12 15.6c-1.98 0-3.6-1.62-3.6-3.6s1.62-3.6 3.6-3.6 3.6 1.62 3.6 3.6-1.62 3.6-3.6 3.6z"/></svg><span>Settings</span></button>
-  </nav>
 
   <!-- TOAST -->
   <div id="toast" class="toast" role="alert"></div>
 
   <script>
     // ═══════════════════════════════════════════════════════════════
-    //  VERSEFLOW — Daily Devotional (Amazon Orange Edition)
-    //  One verse per day, biblically sound, using wldeh/bible-api
+    //  VERSEFLOW — Daily Devotion (Ultra‑Fast)
+    //  Optimized for speed, compatibility, and minimal footprint.
     // ═══════════════════════════════════════════════════════════════
 
     (function() {
@@ -916,30 +114,9 @@
       let currentDevotion = null;
 
       // ─── DOM REFS ──────────────────────────────────────────────
-      const $ = (id) => document.getElementById(id);
-      const homeContent = $('homeContent');
-      const bibleSearchInput = $('bibleSearchInput');
-      const bibleSearchResults = $('bibleSearchResults');
-      const bookSelect = $('bookSelect');
-      const chapterSelect = $('chapterSelect');
-      const goToChapter = $('goToChapter');
-      const chapterRef = $('chapterRef');
-      const chapterText = $('chapterText');
-      const beliefsList = $('beliefsList');
-      const randomVerseBtn = $('randomVerseBtn');
-      const topicSearchBtn = $('topicSearchBtn');
-      const topicSearchArea = $('topicSearchArea');
-      const topicInput = $('topicInput');
-      const topicGoBtn = $('topicGoBtn');
-      const topicResults = $('topicResults');
-      const savedList = $('savedList');
-      const savedEmpty = $('savedEmpty');
-      const savedBadge = $('savedBadge');
-      const clearAllBtn = $('clearAllBtn');
-      const translationSelect = $('translationSelect');
-      const themeToggleGroup = $('themeToggleGroup');
-      const themeToggle = $('themeToggle');
-      const toast = $('toast');
+      const devotionContent = document.getElementById('devotionContent');
+      const themeToggle = document.getElementById('themeToggle');
+      const toast = document.getElementById('toast');
 
       // ─── TOAST ──────────────────────────────────────────────────
       let toastTimer;
@@ -958,9 +135,6 @@
           theme;
         document.documentElement.setAttribute('data-theme', actual);
         localStorage.setItem('verseflow_theme', theme);
-        document.querySelectorAll('#themeToggleGroup button').forEach(b => {
-          b.classList.toggle('active', b.dataset.theme === theme);
-        });
       }
 
       function initTheme() {
@@ -968,149 +142,45 @@
         applyTheme(saved);
       }
 
-      // ─── NAVIGATION ─────────────────────────────────────────────
-      function navigateTo(pageId) {
-        document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
-        const target = document.getElementById('page-' + pageId);
-        if (target) target.classList.add('active');
-        document.querySelectorAll('.bottom-nav button').forEach(b => {
-          b.classList.toggle('active', b.dataset.page === pageId);
-          b.setAttribute('aria-selected', b.dataset.page === pageId);
-        });
-        if (pageId === 'saved') renderSaved();
-      }
-
-      document.querySelectorAll('.bottom-nav button').forEach(btn => {
-        btn.addEventListener('click', () => navigateTo(btn.dataset.page));
+      themeToggle.addEventListener('click', () => {
+        const cycle = ['system', 'light', 'dark'];
+        const current = currentTheme;
+        const idx = cycle.indexOf(current);
+        const next = cycle[(idx + 1) % cycle.length];
+        applyTheme(next);
       });
 
-      // ─── BIBLE BOOKS (for reader) ─────────────────────────────
-      const BOOKS = [
-        { id: 'gen', name: 'Genesis', c: 50 },
-        { id: 'exo', name: 'Exodus', c: 40 },
-        { id: 'lev', name: 'Leviticus', c: 27 },
-        { id: 'num', name: 'Numbers', c: 36 },
-        { id: 'deu', name: 'Deuteronomy', c: 34 },
-        { id: 'jos', name: 'Joshua', c: 24 },
-        { id: 'jdg', name: 'Judges', c: 21 },
-        { id: 'rut', name: 'Ruth', c: 4 },
-        { id: '1sa', name: '1 Samuel', c: 31 },
-        { id: '2sa', name: '2 Samuel', c: 24 },
-        { id: '1ki', name: '1 Kings', c: 22 },
-        { id: '2ki', name: '2 Kings', c: 25 },
-        { id: '1ch', name: '1 Chronicles', c: 29 },
-        { id: '2ch', name: '2 Chronicles', c: 36 },
-        { id: 'ezr', name: 'Ezra', c: 10 },
-        { id: 'neh', name: 'Nehemiah', c: 13 },
-        { id: 'est', name: 'Esther', c: 10 },
-        { id: 'job', name: 'Job', c: 42 },
-        { id: 'psa', name: 'Psalms', c: 150 },
-        { id: 'pro', name: 'Proverbs', c: 31 },
-        { id: 'ecc', name: 'Ecclesiastes', c: 12 },
-        { id: 'sng', name: 'Song of Solomon', c: 8 },
-        { id: 'isa', name: 'Isaiah', c: 66 },
-        { id: 'jer', name: 'Jeremiah', c: 52 },
-        { id: 'lam', name: 'Lamentations', c: 5 },
-        { id: 'ezk', name: 'Ezekiel', c: 48 },
-        { id: 'dan', name: 'Daniel', c: 12 },
-        { id: 'hos', name: 'Hosea', c: 14 },
-        { id: 'jol', name: 'Joel', c: 3 },
-        { id: 'amo', name: 'Amos', c: 9 },
-        { id: 'oba', name: 'Obadiah', c: 1 },
-        { id: 'jon', name: 'Jonah', c: 4 },
-        { id: 'mic', name: 'Micah', c: 7 },
-        { id: 'nam', name: 'Nahum', c: 3 },
-        { id: 'hab', name: 'Habakkuk', c: 3 },
-        { id: 'zep', name: 'Zephaniah', c: 3 },
-        { id: 'hag', name: 'Haggai', c: 2 },
-        { id: 'zec', name: 'Zechariah', c: 14 },
-        { id: 'mal', name: 'Malachi', c: 4 },
-        { id: 'mat', name: 'Matthew', c: 28 },
-        { id: 'mrk', name: 'Mark', c: 16 },
-        { id: 'luk', name: 'Luke', c: 24 },
-        { id: 'jhn', name: 'John', c: 21 },
-        { id: 'act', name: 'Acts', c: 28 },
-        { id: 'rom', name: 'Romans', c: 16 },
-        { id: '1co', name: '1 Corinthians', c: 16 },
-        { id: '2co', name: '2 Corinthians', c: 13 },
-        { id: 'gal', name: 'Galatians', c: 6 },
-        { id: 'eph', name: 'Ephesians', c: 6 },
-        { id: 'php', name: 'Philippians', c: 4 },
-        { id: 'col', name: 'Colossians', c: 4 },
-        { id: '1th', name: '1 Thessalonians', c: 5 },
-        { id: '2th', name: '2 Thessalonians', c: 3 },
-        { id: '1ti', name: '1 Timothy', c: 6 },
-        { id: '2ti', name: '2 Timothy', c: 4 },
-        { id: 'tit', name: 'Titus', c: 3 },
-        { id: 'phm', name: 'Philemon', c: 1 },
-        { id: 'heb', name: 'Hebrews', c: 13 },
-        { id: 'jas', name: 'James', c: 5 },
-        { id: '1pe', name: '1 Peter', c: 5 },
-        { id: '2pe', name: '2 Peter', c: 3 },
-        { id: '1jn', name: '1 John', c: 5 },
-        { id: '2jn', name: '2 John', c: 1 },
-        { id: '3jn', name: '3 John', c: 1 },
-        { id: 'jud', name: 'Jude', c: 1 },
-        { id: 'rev', name: 'Revelation', c: 22 }
-      ];
-
-      function populateBookSelect() {
-        bookSelect.innerHTML = '';
-        BOOKS.forEach((b, i) => {
-          const opt = document.createElement('option');
-          opt.value = i;
-          opt.textContent = b.name;
-          bookSelect.appendChild(opt);
-        });
-        bookSelect.value = 0;
-        updateChapterSelect();
-      }
-
-      function updateChapterSelect() {
-        const idx = parseInt(bookSelect.value);
-        const book = BOOKS[idx];
-        chapterSelect.innerHTML = '';
-        for (let i = 1; i <= book.c; i++) {
-          const opt = document.createElement('option');
-          opt.value = i;
-          opt.textContent = i;
-          chapterSelect.appendChild(opt);
+      // ─── API HELPERS (with fallback for older browsers) ──────
+      function apiFetch(url) {
+        // Use fetch if available, else fallback to XMLHttpRequest
+        if (window.fetch) {
+          return fetch(url).then(res => {
+            if (!res.ok) throw new Error('API request failed');
+            return res.json();
+          });
+        } else {
+          return new Promise((resolve, reject) => {
+            const xhr = new XMLHttpRequest();
+            xhr.open('GET', url, true);
+            xhr.onload = function() {
+              if (xhr.status >= 200 && xhr.status < 300) {
+                try { resolve(JSON.parse(xhr.responseText)); } catch (e) { reject(e); }
+              } else {
+                reject(new Error('API request failed'));
+              }
+            };
+            xhr.onerror = function() { reject(new Error('Network error')); };
+            xhr.send();
+          });
         }
-        chapterSelect.value = 1;
-      }
-
-      bookSelect.addEventListener('change', updateChapterSelect);
-
-      // ─── API HELPERS ────────────────────────────────────────────
-      async function fetchVerse(ref, translation) {
-        const url = `${API_BASE}/${encodeURIComponent(ref)}?translation=${translation}`;
-        const res = await fetch(url);
-        if (!res.ok) throw new Error('Verse not found');
-        return res.json();
-      }
-
-      async function fetchChapter(bookId, chapter, translation) {
-        const url = `${API_BASE}/${bookId}/${chapter}?translation=${translation}`;
-        const res = await fetch(url);
-        if (!res.ok) throw new Error('Chapter not found');
-        return res.json();
       }
 
       async function fetchRandom(translation) {
         const url = `${API_BASE}/?random=verse&translation=${translation}`;
-        const res = await fetch(url);
-        if (!res.ok) throw new Error('Random verse not found');
-        return res.json();
+        return await apiFetch(url);
       }
 
-      async function searchBible(query, translation) {
-        const url = `${API_BASE}/?search=${encodeURIComponent(query)}&translation=${translation}`;
-        const res = await fetch(url);
-        if (!res.ok) throw new Error('Search failed');
-        return res.json();
-      }
-
-      // ─── DAILY VERSE (fixed per day) ────────────────────────────
+      // ─── DAILY VERSE (cached by date) ──────────────────────────
       function getTodayKey() {
         const d = new Date();
         return `${d.getFullYear()}-${d.getMonth()+1}-${d.getDate()}`;
@@ -1145,103 +215,103 @@
         }
       }
 
-      // ─── DEVOTION GENERATOR (biblically sound, Adventist‑themed) ──
+      // ─── DEVOTION GENERATOR (generic Christian) ────────────────
       const DEVOTION_TEMPLATES = [{
         theme: 'Grace',
         body: 'God’s grace is unearned and boundless. It reaches us in our lowest moments and lifts us to new life. “For by grace you have been saved through faith” (Ephesians 2:8).',
         live: 'Reflect on a time you experienced grace. Share that story with someone today.',
         punchline: 'Grace is the heartbeat of heaven, beating for you.',
-        discuss: 'How does grace change the way you see yourself?'
+        prayer: 'Lord, thank you for your amazing grace. Help me to extend that grace to others today. Amen.'
       }, {
         theme: 'Salvation',
         body: 'Salvation is not a reward for good works but a gift received through faith in Jesus Christ. “For God so loved the world that he gave his one and only Son” (John 3:16).',
         live: 'Thank God for the gift of salvation. Write a short prayer of gratitude.',
         punchline: 'Saved by grace, kept by faith, sealed by love.',
-        discuss: 'What does it mean to live as a saved person?'
+        prayer: 'Father, I receive your gift of salvation with a humble heart. Lead me in your ways. Amen.'
       }, {
         theme: 'Faith',
         body: 'Faith is trusting God even when the path is unclear. It is the assurance of things hoped for, the conviction of things not seen (Hebrews 11:1).',
         live: 'Take one step of faith today in an area you’ve been hesitant.',
         punchline: 'Faith turns whispers into shouts of victory.',
-        discuss: 'What area of your life requires more faith?'
+        prayer: 'Lord, increase my faith. Help me to trust you even when I cannot see the way. Amen.'
       }, {
         theme: 'Hope',
         body: 'Hope anchors our soul in the promises of God. It looks beyond the present to the eternal. “We have this hope as an anchor for the soul, firm and secure” (Hebrews 6:19).',
         live: 'Encourage someone with a word of hope today.',
         punchline: 'Hope is the dawn that breaks the darkest night.',
-        discuss: 'How does hope influence your daily decisions?'
+        prayer: 'God of hope, fill me with your peace and joy as I trust in you. Amen.'
       }, {
         theme: 'Love',
         body: 'God’s love is unconditional and transformative. It compels us to love others as He has loved us. “We love because he first loved us” (1 John 4:19).',
         live: 'Perform an act of kindness for someone without expecting anything in return.',
         punchline: 'Love is the language God speaks fluently.',
-        discuss: 'How can you love someone who is difficult to love?'
+        prayer: 'Heavenly Father, teach me to love as you love. Let your love flow through me to others. Amen.'
       }, {
         theme: 'Obedience',
         body: 'Obedience is not legalism but love in action. Jesus said, “If you love me, keep my commandments” (John 14:15).',
         live: 'Identify one command of God you struggle with and commit to obeying it today.',
         punchline: 'Obedience is the fruit of a heart that loves.',
-        discuss: 'Why is obedience often misunderstood as legalism?'
+        prayer: 'Lord, give me a willing heart to obey you, not out of duty, but out of love. Amen.'
       }, {
         theme: 'Prayer',
         body: 'Prayer is our lifeline to God. It is not about eloquent words but about an honest heart. “Pray without ceasing” (1 Thessalonians 5:17).',
         live: 'Spend 10 extra minutes in prayer today, listening for God’s voice.',
         punchline: 'Prayer turns ordinary moments into holy encounters.',
-        discuss: 'What keeps you from praying more regularly?'
+        prayer: 'Father, teach me to pray with sincerity and listen for your voice. Amen.'
       }, {
         theme: 'Repentance',
         body: 'Repentance is turning from sin and turning to God. It is the first step toward renewal. “Repent, for the kingdom of heaven is at hand” (Matthew 4:17).',
         live: 'Confess one sin to God and accept His forgiveness fully.',
         punchline: 'Repentance is the doorway to a new beginning.',
-        discuss: 'Why is repentance often seen as negative when it is so freeing?'
+        prayer: 'Merciful God, I repent of my sins. Cleanse me and restore me. Amen.'
       }, {
         theme: 'Forgiveness',
         body: 'Forgiveness releases the burden of bitterness. It mirrors the forgiveness we have received in Christ. “Be kind and compassionate to one another, forgiving each other, just as in Christ God forgave you” (Ephesians 4:32).',
         live: 'Forgive someone who has hurt you, even if only in your heart.',
         punchline: 'Forgiveness is the key that unlocks your own prison.',
-        discuss: 'What makes forgiveness so difficult?'
+        prayer: 'Lord, help me to forgive as you have forgiven me. Release any bitterness in my heart. Amen.'
       }, {
         theme: 'Service',
         body: 'Service is an expression of love. Jesus came to serve, not to be served. “For even the Son of Man did not come to be served, but to serve” (Mark 10:45).',
         live: 'Find a practical way to serve someone in need today.',
         punchline: 'Service is love in work clothes.',
-        discuss: 'How can we serve without seeking recognition?'
+        prayer: 'Jesus, show me how to serve others with humility and love. Amen.'
       }, {
         theme: 'Discipleship',
         body: 'Discipleship is the journey of following Jesus daily. It involves learning, growing, and sharing. “Go and make disciples of all nations” (Matthew 28:19).',
         live: 'Share something you’ve learned about Jesus with a friend.',
         punchline: 'Discipleship is a walk, not a sprint.',
-        discuss: 'What does being a disciple look like in your daily life?'
+        prayer: 'Lord, make me a faithful disciple who follows you and leads others to you. Amen.'
       }, {
-        theme: 'Sabbath',
-        body: 'The Sabbath is a gift of rest, a sign of our relationship with God, and a foretaste of eternity. “The Sabbath was made for man, not man for the Sabbath” (Mark 2:27).',
-        live: 'Set aside intentional time to rest and worship this Sabbath.',
-        punchline: 'Sabbath is a sanctuary in time.',
-        discuss: 'How can you make the Sabbath more meaningful?'
+        theme: 'Rest',
+        body: 'Rest is a gift from God. He invites us to find rest in Him. “Come to me, all you who are weary and burdened, and I will give you rest” (Matthew 11:28).',
+        live: 'Set aside time today to rest in God’s presence, free from distractions.',
+        punchline: 'Rest in the Lord, and be renewed.',
+        prayer: 'Father, I come to you with my burdens. Give me rest for my soul. Amen.'
       }, {
         theme: 'Creation',
         body: 'Creation reveals God’s power and love. We are stewards of His handiwork. “In the beginning God created the heavens and the earth” (Genesis 1:1).',
         live: 'Spend time in nature and praise the Creator for His works.',
         punchline: 'Creation is a love letter from the Creator.',
-        discuss: 'How does creation inspire your worship?'
+        prayer: 'Creator God, I marvel at your works. Help me to care for your creation. Amen.'
       }, {
         theme: 'Second Coming',
         body: 'Jesus is coming again to take us home. This hope shapes our lives and our witness. “Behold, I am coming soon” (Revelation 22:12).',
         live: 'Live today with the confidence that Jesus is coming soon.',
         punchline: 'His return is our blessed hope.',
-        discuss: 'How does the Second Coming influence your daily choices?'
+        prayer: 'Come, Lord Jesus. May your return be my hope and my motivation to live for you. Amen.'
       }, {
-        theme: 'Sanctuary',
-        body: 'Christ is our High Priest, ministering in the heavenly sanctuary. His ministry brings cleansing and power. “We have a great high priest who has ascended into heaven” (Hebrews 4:14).',
-        live: 'Thank Jesus for His ongoing ministry on your behalf.',
-        punchline: 'The sanctuary reveals God’s plan of salvation.',
-        discuss: 'How does the sanctuary doctrine deepen your understanding of salvation?'
+        theme: 'Sanctification',
+        body: 'Sanctification is the work of God’s grace in us, transforming us into the likeness of Christ. “May the God of peace himself sanctify you completely” (1 Thessalonians 5:23).',
+        live: 'Ask the Holy Spirit to reveal areas in your life that need transformation.',
+        punchline: 'Sanctification is a journey of becoming more like Jesus.',
+        prayer: 'Holy Spirit, work in me to make me more like Christ. Purify my heart. Amen.'
       }, {
         theme: 'Law',
         body: 'God’s law is a reflection of His character. It guides us in the path of righteousness. “The law of the LORD is perfect, refreshing the soul” (Psalm 19:7).',
         live: 'Meditate on one of the Ten Commandments and apply it today.',
         punchline: 'The law is a lamp to our feet.',
-        discuss: 'How can we uphold the law without being legalistic?'
+        prayer: 'Lord, help me to love your law and to walk in your ways. Amen.'
       }];
 
       function getDevotionForVerse(verseRef) {
@@ -1253,68 +323,6 @@
         }
         const idx = Math.abs(hash) % DEVOTION_TEMPLATES.length;
         return DEVOTION_TEMPLATES[idx];
-      }
-
-      // ─── RENDER HOME ────────────────────────────────────────────
-      async function renderHome() {
-        const verse = await getDailyVerse();
-        if (!verse) {
-          homeContent.innerHTML =
-            `<div class="card"><p>Unable to load verse. Please check your connection.</p><button class="btn btn-primary" onclick="location.reload()">Retry</button></div>`;
-          return;
-        }
-        const devotion = getDevotionForVerse(verse.ref);
-        currentDevotion = devotion;
-        const isSaved = savedItems.some(s => s.ref === verse.ref);
-
-        homeContent.innerHTML = `
-          <div class="card card-verse">
-            <div class="verse-ref">${verse.ref} · ${verse.translation.toUpperCase()}</div>
-            <div class="verse-text">${verse.text}</div>
-            <div class="theme-tag">${devotion.theme}</div>
-          </div>
-          <div class="card card-gold">
-            <div class="devotion-title">Devotion</div>
-            <div class="devotion-body">${devotion.body}</div>
-            <div class="live-it"><strong>LIVE IT</strong> ${devotion.live}</div>
-            <div class="punchline">“${devotion.punchline}”</div>
-            <div class="discuss-q"><strong>DISCUSS</strong> ${devotion.discuss}</div>
-            <div class="btn-group">
-              <button class="btn btn-outline" id="saveHomeBtn"><svg viewBox="0 0 24 24" width="18" height="18"><path d="M17 3H7c-1.1 0-2 .9-2 2v16l7-3 7 3V5c0-1.1-.9-2-2-2z"/></svg> ${isSaved?'Unsave':'Save'}</button>
-              <button class="btn btn-outline" id="shareHomeBtn"><svg viewBox="0 0 24 24" width="18" height="18"><path d="M18 16.08c-.76 0-1.44.3-1.96.77L8.91 12.7c.05-.23.09-.46.09-.7s-.04-.47-.09-.7l7.05-4.11c.54.5 1.25.81 2.04.81 1.66 0 3-1.34 3-3s-1.34-3-3-3-3 1.34-3 3c0 .24.04.47.09.7L8.04 9.81C7.5 9.31 6.79 9 6 9c-1.66 0-3 1.34-3 3s1.34 3 3 3c.79 0 1.5-.31 2.04-.81l7.12 4.16c-.05.21-.08.43-.08.65 0 1.61 1.31 2.92 2.92 2.92 1.61 0 2.92-1.31 2.92-2.92s-1.31-2.92-2.92-2.92z"/></svg> Share</button>
-            </div>
-          </div>
-          <div class="card">
-            <div class="verse-ref" style="font-size:0.7rem;">STUDY MODE</div>
-            <div class="study-section">
-              <div class="label">Context</div>
-              <div class="content"><a href="#" id="studyContextLink">Read surrounding verses</a></div>
-              <div class="label">Theological Theme</div>
-              <div class="content">${devotion.theme} — related to the 28 Fundamental Beliefs.</div>
-            </div>
-          </div>
-        `;
-
-        document.getElementById('saveHomeBtn').addEventListener('click', () => toggleSave(verse, devotion));
-        document.getElementById('shareHomeBtn').addEventListener('click', () => shareDevotion(verse, devotion));
-        document.getElementById('studyContextLink').addEventListener('click', (e) => {
-          e.preventDefault();
-          const parts = verse.ref.split(' ');
-          const bookName = parts.slice(0, -1).join(' ');
-          const chapter = parts[parts.length - 1].split(':')[0];
-          const bookIdx = BOOKS.findIndex(b => b.name.toLowerCase() === bookName.toLowerCase());
-          if (bookIdx >= 0) {
-            bookSelect.value = bookIdx;
-            updateChapterSelect();
-            chapterSelect.value = parseInt(chapter);
-            loadChapter();
-            navigateTo('bible');
-          } else {
-            showToast('Could not locate book.');
-          }
-        });
-
-        updateSavedBadge();
       }
 
       // ─── SAVE / UNSAVE ──────────────────────────────────────────
@@ -1334,253 +342,57 @@
           showToast('Saved!');
         }
         localStorage.setItem(SAVED_KEY, JSON.stringify(savedItems));
-        renderHome();
-        updateSavedBadge();
-      }
-
-      function renderSaved() {
-        savedList.innerHTML = '';
-        if (savedItems.length === 0) {
-          savedEmpty.style.display = 'block';
-          return;
-        }
-        savedEmpty.style.display = 'none';
-        savedItems.forEach((item, i) => {
-          const div = document.createElement('div');
-          div.className = 'saved-item';
-          div.innerHTML = `
-            <div class="ref">${item.ref}</div>
-            <div class="text">${item.text}</div>
-            <div style="font-size:0.8rem;color:var(--text-muted);">${item.devotion.theme} — ${item.devotion.punchline}</div>
-            <div class="actions">
-              <button data-idx="${i}" class="remove-saved">Remove</button>
-              <button data-idx="${i}" class="share-saved">Share</button>
-            </div>
-          `;
-          savedList.appendChild(div);
-        });
-        savedList.querySelectorAll('.remove-saved').forEach(btn => {
-          btn.addEventListener('click', () => {
-            const idx = parseInt(btn.dataset.idx);
-            savedItems.splice(idx, 1);
-            localStorage.setItem(SAVED_KEY, JSON.stringify(savedItems));
-            renderSaved();
-            updateSavedBadge();
-            showToast('Removed.');
-          });
-        });
-        savedList.querySelectorAll('.share-saved').forEach(btn => {
-          btn.addEventListener('click', () => {
-            const idx = parseInt(btn.dataset.idx);
-            const item = savedItems[idx];
-            shareDevotion({ ref: item.ref, text: item.text, translation: item.translation }, item.devotion);
-          });
-        });
-      }
-
-      function updateSavedBadge() {
-        const count = savedItems.length;
-        if (count > 0) {
-          savedBadge.classList.remove('hidden');
-        } else {
-          savedBadge.classList.add('hidden');
-        }
+        renderDevotion(); // refresh to update button state
       }
 
       // ─── SHARE ──────────────────────────────────────────────────
       function shareDevotion(verse, devotion) {
         const text =
-          `📖 ${verse.ref} (${verse.translation.toUpperCase()})\n\n${verse.text}\n\n💭 ${devotion.body}\n\n✅ ${devotion.live}\n\n✨ “${devotion.punchline}”\n\n#VerseFlow #Bible #Devotion`;
+          `📖 ${verse.ref} (${verse.translation.toUpperCase()})\n\n${verse.text}\n\n💭 ${devotion.body}\n\n✅ ${devotion.live}\n\n✨ “${devotion.punchline}”\n\n🙏 ${devotion.prayer}\n\n#VerseFlow #DailyDevotion`;
         if (navigator.share) {
-          navigator.share({ title: 'VerseFlow', text }).catch(() => {});
+          navigator.share({ title: 'VerseFlow - Daily Devotion', text }).catch(() => {});
         } else {
           navigator.clipboard.writeText(text).then(() => showToast('Copied to clipboard!')).catch(() => showToast(
             'Unable to copy.'));
         }
       }
 
-      // ─── BIBLE READER ───────────────────────────────────────────
-      async function loadChapter() {
-        const idx = parseInt(bookSelect.value);
-        const book = BOOKS[idx];
-        const ch = parseInt(chapterSelect.value);
-        try {
-          const data = await fetchChapter(book.id, ch, currentTranslation);
-          chapterRef.textContent = `${book.name} ${ch} (${currentTranslation.toUpperCase()})`;
-          let html = '';
-          const verses = data.verses || [];
-          verses.forEach(v => {
-            html += `<div class="v"><span class="num">${v.verse}</span><span class="text">${v.text}</span></div>`;
-          });
-          chapterText.innerHTML = html || '<p>No verses found.</p>';
-        } catch (e) {
-          chapterRef.textContent = 'Error';
-          chapterText.innerHTML = '<p>Unable to load chapter. Please try again.</p>';
-        }
-      }
-
-      goToChapter.addEventListener('click', loadChapter);
-
-      // ─── SEARCH ──────────────────────────────────────────────────
-      let searchTimeout;
-
-      bibleSearchInput.addEventListener('input', () => {
-        clearTimeout(searchTimeout);
-        const query = bibleSearchInput.value.trim();
-        if (query.length < 2) {
-          bibleSearchResults.innerHTML = '';
+      // ─── RENDER DEVOTION ──────────────────────────────────────
+      async function renderDevotion() {
+        const verse = await getDailyVerse();
+        if (!verse) {
+          devotionContent.innerHTML =
+            `<div class="card"><p>Unable to load devotion. Please check your connection.</p><button class="btn btn-primary" onclick="location.reload()">Retry</button></div>`;
           return;
         }
-        searchTimeout = setTimeout(async () => {
-          try {
-            const data = await searchBible(query, currentTranslation);
-            if (!data.verses || data.verses.length === 0) {
-              bibleSearchResults.innerHTML = '<div class="card"><p>No results found.</p></div>';
-              return;
-            }
-            let html = '<div class="card"><div class="search-results">';
-            data.verses.slice(0, 20).forEach(v => {
-              html += `<div class="search-result" data-ref="${v.reference}">
-                <div class="ref">${v.reference}</div>
-                <div class="text">${v.text}</div>
-              </div>`;
-            });
-            html += '</div></div>';
-            bibleSearchResults.innerHTML = html;
-            bibleSearchResults.querySelectorAll('.search-result').forEach(el => {
-              el.addEventListener('click', () => {
-                const ref = el.dataset.ref;
-                const parts = ref.split(' ');
-                const bookName = parts.slice(0, -1).join(' ');
-                const chv = parts[parts.length - 1].split(':');
-                const ch = parseInt(chv[0]);
-                const bookIdx = BOOKS.findIndex(b => b.name.toLowerCase() === bookName.toLowerCase());
-                if (bookIdx >= 0 && !isNaN(ch)) {
-                  bookSelect.value = bookIdx;
-                  updateChapterSelect();
-                  chapterSelect.value = ch;
-                  loadChapter();
-                  navigateTo('bible');
-                  bibleSearchInput.value = '';
-                  bibleSearchResults.innerHTML = '';
-                } else {
-                  showToast('Cannot navigate to that reference.');
-                }
-              });
-            });
-          } catch (e) {
-            bibleSearchResults.innerHTML = '<div class="card"><p>Search failed. Please try again.</p></div>';
-          }
-        }, 500);
-      });
+        const devotion = getDevotionForVerse(verse.ref);
+        currentDevotion = devotion;
+        const isSaved = savedItems.some(s => s.ref === verse.ref);
+        const today = new Date().toLocaleDateString(undefined, { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
 
-      // ─── DISCOVER: BELIEFS ──────────────────────────────────────
-      const beliefs = [
-        "Holy Scriptures", "Trinity", "Father", "Son", "Holy Spirit",
-        "Creation", "Humanity", "Great Controversy", "Christ's Life, Death and Resurrection",
-        "Salvation", "Growing in Christ", "Church", "Remnant and Mission",
-        "Unity", "Baptism", "Lord's Supper", "Spiritual Gifts",
-        "Gift of Prophecy", "God's Law", "Sabbath", "Stewardship",
-        "Christian Behaviour", "Marriage and Family", "Christ's Ministry in the Heavenly Sanctuary",
-        "Second Coming", "Death and Resurrection", "Millennium and End of Sin", "New Earth"
-      ];
-
-      function renderBeliefs() {
-        beliefsList.innerHTML = beliefs.map((b, i) =>
-          `<div class="belief-card"><div class="num">${i+1}</div><div class="title">${b}</div></div>`
-        ).join('');
-      }
-
-      // ─── DISCOVER: RANDOM VERSE & TOPIC SEARCH ──────────────────
-      randomVerseBtn.addEventListener('click', async () => {
-        try {
-          const data = await fetchRandom(currentTranslation);
-          const verse = { ref: data.reference, text: data.text, translation: currentTranslation };
-          const devotion = getDevotionForVerse(verse.ref);
-          const card = document.createElement('div');
-          card.className = 'card card-verse mt-12';
-          card.innerHTML = `
+        devotionContent.innerHTML = `
+          <div style="font-size:0.8rem;color:var(--text-muted);text-align:center;margin-bottom:12px;">${today}</div>
+          <div class="card card-verse">
             <div class="verse-ref">${verse.ref} · ${verse.translation.toUpperCase()}</div>
             <div class="verse-text">${verse.text}</div>
             <div class="theme-tag">${devotion.theme}</div>
-            <div class="devotion-body mt-8">${devotion.body}</div>
+          </div>
+          <div class="card card-gold">
+            <div class="devotion-title">Reflection</div>
+            <div class="devotion-body">${devotion.body}</div>
+            <div class="live-it"><strong>LIVE IT</strong> ${devotion.live}</div>
+            <div class="punchline">“${devotion.punchline}”</div>
+            <div class="prayer-box"><strong>🙏 PRAYER</strong> ${devotion.prayer}</div>
             <div class="btn-group">
-              <button class="btn btn-outline" id="tempSave">Save</button>
-              <button class="btn btn-outline" id="tempShare">Share</button>
+              <button class="btn btn-outline" id="saveBtn"><svg viewBox="0 0 24 24" width="18" height="18"><path d="M17 3H7c-1.1 0-2 .9-2 2v16l7-3 7 3V5c0-1.1-.9-2-2-2z"/></svg> ${isSaved?'Unsave':'Save'}</button>
+              <button class="btn btn-outline" id="shareBtn"><svg viewBox="0 0 24 24" width="18" height="18"><path d="M18 16.08c-.76 0-1.44.3-1.96.77L8.91 12.7c.05-.23.09-.46.09-.7s-.04-.47-.09-.7l7.05-4.11c.54.5 1.25.81 2.04.81 1.66 0 3-1.34 3-3s-1.34-3-3-3-3 1.34-3 3c0 .24.04.47.09.7L8.04 9.81C7.5 9.31 6.79 9 6 9c-1.66 0-3 1.34-3 3s1.34 3 3 3c.79 0 1.5-.31 2.04-.81l7.12 4.16c-.05.21-.08.43-.08.65 0 1.61 1.31 2.92 2.92 2.92 1.61 0 2.92-1.31 2.92-2.92s-1.31-2.92-2.92-2.92z"/></svg> Share</button>
             </div>
-          `;
-          const parent = randomVerseBtn.closest('.card');
-          parent.parentNode.insertBefore(card, parent.nextSibling);
-          card.querySelector('#tempSave').addEventListener('click', () => toggleSave(verse, devotion));
-          card.querySelector('#tempShare').addEventListener('click', () => shareDevotion(verse, devotion));
-          showToast('Random verse loaded!');
-        } catch (e) {
-          showToast('Error fetching random verse.');
-        }
-      });
+          </div>
+        `;
 
-      topicSearchBtn.addEventListener('click', () => {
-        topicSearchArea.classList.toggle('hidden');
-      });
-
-      topicGoBtn.addEventListener('click', async () => {
-        const query = topicInput.value.trim();
-        if (!query) return;
-        try {
-          const data = await searchBible(query, currentTranslation);
-          if (!data.verses || data.verses.length === 0) {
-            topicResults.innerHTML = '<p>No verses found.</p>';
-            return;
-          }
-          let html = '<div class="search-results">';
-          data.verses.slice(0, 10).forEach(v => {
-            html += `<div class="search-result" style="cursor:default;">
-              <div class="ref">${v.reference}</div>
-              <div class="text">${v.text}</div>
-            </div>`;
-          });
-          html += '</div>';
-          topicResults.innerHTML = html;
-        } catch (e) {
-          topicResults.innerHTML = '<p>Search failed.</p>';
-        }
-      });
-
-      // ─── SETTINGS ────────────────────────────────────────────────
-      themeToggleGroup.addEventListener('click', (e) => {
-        const btn = e.target.closest('button');
-        if (!btn) return;
-        applyTheme(btn.dataset.theme);
-      });
-
-      themeToggle.addEventListener('click', () => {
-        const cycle = ['system', 'light', 'dark'];
-        const current = currentTheme;
-        const idx = cycle.indexOf(current);
-        const next = cycle[(idx + 1) % cycle.length];
-        applyTheme(next);
-      });
-
-      translationSelect.addEventListener('change', () => {
-        currentTranslation = translationSelect.value;
-        localStorage.setItem('verseflow_translation', currentTranslation);
-        localStorage.removeItem(DAILY_KEY);
-        showToast('Translation changed. Reloading daily verse…');
-        renderHome();
-        if (document.getElementById('page-bible').classList.contains('active')) {
-          loadChapter();
-        }
-      });
-
-      clearAllBtn.addEventListener('click', () => {
-        if (confirm('Clear all saved items?')) {
-          savedItems = [];
-          localStorage.setItem(SAVED_KEY, JSON.stringify(savedItems));
-          renderSaved();
-          updateSavedBadge();
-          showToast('Cleared.');
-        }
-      });
+        document.getElementById('saveBtn').addEventListener('click', () => toggleSave(verse, devotion));
+        document.getElementById('shareBtn').addEventListener('click', () => shareDevotion(verse, devotion));
+      }
 
       // ─── INIT ────────────────────────────────────────────────────
       async function init() {
@@ -1590,27 +402,11 @@
         }
         const trans = localStorage.getItem('verseflow_translation');
         if (trans) currentTranslation = trans;
-        translationSelect.value = currentTranslation;
 
         initTheme();
-        populateBookSelect();
-        renderBeliefs();
-        await renderHome();
-        loadChapter();
-        updateSavedBadge();
+        await renderDevotion();
 
-        const hash = window.location.hash.replace('#', '');
-        if (hash && ['home', 'bible', 'discover', 'saved', 'settings'].includes(hash)) {
-          navigateTo(hash);
-        }
-        window.addEventListener('hashchange', () => {
-          const h = window.location.hash.replace('#', '');
-          if (h && ['home', 'bible', 'discover', 'saved', 'settings'].includes(h)) {
-            navigateTo(h);
-          }
-        });
-
-        console.log('🌊 VerseFlow ready — Amazon Orange Edition');
+        console.log('🌊 VerseFlow — Daily Devotion ready (ultra‑fast)');
       }
 
       document.addEventListener('DOMContentLoaded', init);
