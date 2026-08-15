@@ -32,10 +32,10 @@
       --text-secondary: #3d4459;
       --text-muted: #6e768a;
       --border: #e8e4da;
-      --accent: #2a4b7c;
-      --accent-light: #d4e0f0;
-      --gold: #b8976a;
-      --gold-light: #f0e4d0;
+      --accent: #FF9900;        /* Amazon orange */
+      --accent-light: #FFF0E0;
+      --gold: #D9822B;
+      --gold-light: #fce4d6;
       --input-bg: #f0ede6;
       --verse-bg: #fcfaf5;
       --divider: #e8e4da;
@@ -48,9 +48,9 @@
       --text-secondary: #b8b8b0;
       --text-muted: #7a7a8a;
       --border: #2a3348;
-      --accent: #6a9bc7;
-      --accent-light: #1e2f44;
-      --gold: #c9a87c;
+      --accent: #FF9900;
+      --accent-light: #332211;
+      --gold: #FFB347;
       --gold-light: #2a2218;
       --input-bg: #1a2438;
       --verse-bg: #111d30;
@@ -414,7 +414,7 @@
     }
     .search-wrap input:focus {
       border-color: var(--accent);
-      box-shadow: 0 0 0 3px rgba(42, 75, 124, 0.15);
+      box-shadow: 0 0 0 3px rgba(255, 153, 0, 0.2);
     }
     .search-wrap .search-icon {
       position: absolute;
@@ -582,7 +582,7 @@
     .toggle-wrap button.active {
       background: var(--accent);
       color: #fff;
-      box-shadow: 0 2px 8px rgba(42, 75, 124, 0.25);
+      box-shadow: 0 2px 8px rgba(255, 153, 0, 0.3);
     }
     .license-text {
       font-size: 0.75rem;
@@ -636,6 +636,14 @@
       font-size: 0.9rem;
       color: var(--text-secondary);
       line-height: 1.6;
+    }
+    .study-section .content a {
+      color: var(--accent);
+      text-decoration: none;
+      font-weight: 500;
+    }
+    .study-section .content a:hover {
+      text-decoration: underline;
     }
 
     /* ── EMPTY STATE ── */
@@ -838,16 +846,23 @@
       <div class="card">
         <h3 style="font-size:1rem;font-weight:700;margin-bottom:12px;">Bible Data</h3>
         <div class="setting-row">
-          <div><div class="label">Translation</div><div class="desc">WEB / KJV / etc. via API</div></div>
+          <div><div class="label">Translation</div><div class="desc">Select version</div></div>
           <select id="translationSelect" style="background:var(--input-bg);border:1px solid var(--border);border-radius:var(--radius-sm);padding:6px 12px;color:var(--text);font-size:0.85rem;">
-            <option value="web">WEB</option>
-            <option value="kjv">KJV</option>
-            <option value="asv">ASV</option>
+            <option value="web">WEB (Public Domain)</option>
+            <option value="kjv">KJV (Public Domain)</option>
+            <option value="asv">ASV (Public Domain)</option>
+            <option value="ylt">YLT (Public Domain)</option>
+            <option value="bbe">BBE (Public Domain)</option>
           </select>
         </div>
         <div class="license-text">
-          <strong>API: bible-api.com</strong><br />
-          Free, open API. Bible texts are public domain or freely licensed.<br />
+          <strong>Powered by wldeh/bible-api</strong> (MIT License)<br />
+          <span style="font-size:0.7rem;">Open-source Bible API with 200+ translations.<br />
+          Source: <a href="https://github.com/wldeh/bible-api" target="_blank" rel="noopener">github.com/wldeh/bible-api</a></span>
+        </div>
+        <div class="license-text">
+          <strong>Attribution</strong><br />
+          Bible texts are in the public domain or freely licensed.<br />
           See <a href="https://bible-api.com/" target="_blank" rel="noopener">bible-api.com</a> for details.
         </div>
       </div>
@@ -881,23 +896,24 @@
 
   <script>
     // ═══════════════════════════════════════════════════════════════
-    //  VERSEFLOW — COMPLETE APP (API‑FIRST)
+    //  VERSEFLOW — Daily Devotional (Amazon Orange Edition)
+    //  One verse per day, biblically sound, using wldeh/bible-api
     // ═══════════════════════════════════════════════════════════════
 
     (function() {
       'use strict';
 
       // ─── CONSTANTS ──────────────────────────────────────────────
-      const API_BASE = 'https://bible-api.com';
-      const STORAGE_KEY = 'verseflow_data';
+      const API_BASE = 'https://bible-api.com'; // wldeh/bible-api (MIT)
       const SAVED_KEY = 'verseflow_saved';
+      const DAILY_KEY = 'verseflow_daily';
 
       // ─── STATE ──────────────────────────────────────────────────
       let currentTheme = 'system';
       let currentTranslation = 'web';
       let savedItems = [];
-      let dailyVerse = null; // { ref, text, translation, date }
-      let currentHomeData = null; // { verse, devotion }
+      let dailyVerse = null;
+      let currentDevotion = null;
 
       // ─── DOM REFS ──────────────────────────────────────────────
       const $ = (id) => document.getElementById(id);
@@ -907,7 +923,6 @@
       const bookSelect = $('bookSelect');
       const chapterSelect = $('chapterSelect');
       const goToChapter = $('goToChapter');
-      const chapterDisplay = $('chapterDisplay');
       const chapterRef = $('chapterRef');
       const chapterText = $('chapterText');
       const beliefsList = $('beliefsList');
@@ -943,7 +958,6 @@
           theme;
         document.documentElement.setAttribute('data-theme', actual);
         localStorage.setItem('verseflow_theme', theme);
-        // update toggle buttons
         document.querySelectorAll('#themeToggleGroup button').forEach(b => {
           b.classList.toggle('active', b.dataset.theme === theme);
         });
@@ -963,7 +977,6 @@
           b.classList.toggle('active', b.dataset.page === pageId);
           b.setAttribute('aria-selected', b.dataset.page === pageId);
         });
-        // refresh saved badge when going to saved
         if (pageId === 'saved') renderSaved();
       }
 
@@ -971,7 +984,7 @@
         btn.addEventListener('click', () => navigateTo(btn.dataset.page));
       });
 
-      // ─── BIBLE BOOKS / CHAPTERS (static list for selectors) ──
+      // ─── BIBLE BOOKS (for reader) ─────────────────────────────
       const BOOKS = [
         { id: 'gen', name: 'Genesis', c: 50 },
         { id: 'exo', name: 'Exodus', c: 40 },
@@ -1097,7 +1110,7 @@
         return res.json();
       }
 
-      // ─── DAILY VERSE ────────────────────────────────────────────
+      // ─── DAILY VERSE (fixed per day) ────────────────────────────
       function getTodayKey() {
         const d = new Date();
         return `${d.getFullYear()}-${d.getMonth()+1}-${d.getDate()}`;
@@ -1105,7 +1118,7 @@
 
       async function getDailyVerse() {
         const today = getTodayKey();
-        const stored = localStorage.getItem('verseflow_daily');
+        const stored = localStorage.getItem(DAILY_KEY);
         if (stored) {
           try {
             const data = JSON.parse(stored);
@@ -1115,17 +1128,15 @@
             }
           } catch (e) {}
         }
-        // fetch new
         try {
           const data = await fetchRandom(currentTranslation);
           const verse = {
             ref: data.reference,
             text: data.text,
             translation: currentTranslation,
-            date: today,
-            raw: data
+            date: today
           };
-          localStorage.setItem('verseflow_daily', JSON.stringify({ date: today, translation: currentTranslation, verse }));
+          localStorage.setItem(DAILY_KEY, JSON.stringify({ date: today, translation: currentTranslation, verse }));
           dailyVerse = verse;
           return verse;
         } catch (e) {
@@ -1134,131 +1145,106 @@
         }
       }
 
-      // ─── DEVOTION GENERATOR ─────────────────────────────────────
-      // Static themes & templates (Adventist‑inspired)
-      const THEMES = [
-        'Grace', 'Salvation', 'Faith', 'Hope', 'Love', 'Obedience',
-        'Prayer', 'Repentance', 'Forgiveness', 'Service', 'Discipleship',
-        'Sabbath', 'Creation', 'Second Coming', 'Sanctuary', 'Law'
-      ];
+      // ─── DEVOTION GENERATOR (biblically sound, Adventist‑themed) ──
+      const DEVOTION_TEMPLATES = [{
+        theme: 'Grace',
+        body: 'God’s grace is unearned and boundless. It reaches us in our lowest moments and lifts us to new life. “For by grace you have been saved through faith” (Ephesians 2:8).',
+        live: 'Reflect on a time you experienced grace. Share that story with someone today.',
+        punchline: 'Grace is the heartbeat of heaven, beating for you.',
+        discuss: 'How does grace change the way you see yourself?'
+      }, {
+        theme: 'Salvation',
+        body: 'Salvation is not a reward for good works but a gift received through faith in Jesus Christ. “For God so loved the world that he gave his one and only Son” (John 3:16).',
+        live: 'Thank God for the gift of salvation. Write a short prayer of gratitude.',
+        punchline: 'Saved by grace, kept by faith, sealed by love.',
+        discuss: 'What does it mean to live as a saved person?'
+      }, {
+        theme: 'Faith',
+        body: 'Faith is trusting God even when the path is unclear. It is the assurance of things hoped for, the conviction of things not seen (Hebrews 11:1).',
+        live: 'Take one step of faith today in an area you’ve been hesitant.',
+        punchline: 'Faith turns whispers into shouts of victory.',
+        discuss: 'What area of your life requires more faith?'
+      }, {
+        theme: 'Hope',
+        body: 'Hope anchors our soul in the promises of God. It looks beyond the present to the eternal. “We have this hope as an anchor for the soul, firm and secure” (Hebrews 6:19).',
+        live: 'Encourage someone with a word of hope today.',
+        punchline: 'Hope is the dawn that breaks the darkest night.',
+        discuss: 'How does hope influence your daily decisions?'
+      }, {
+        theme: 'Love',
+        body: 'God’s love is unconditional and transformative. It compels us to love others as He has loved us. “We love because he first loved us” (1 John 4:19).',
+        live: 'Perform an act of kindness for someone without expecting anything in return.',
+        punchline: 'Love is the language God speaks fluently.',
+        discuss: 'How can you love someone who is difficult to love?'
+      }, {
+        theme: 'Obedience',
+        body: 'Obedience is not legalism but love in action. Jesus said, “If you love me, keep my commandments” (John 14:15).',
+        live: 'Identify one command of God you struggle with and commit to obeying it today.',
+        punchline: 'Obedience is the fruit of a heart that loves.',
+        discuss: 'Why is obedience often misunderstood as legalism?'
+      }, {
+        theme: 'Prayer',
+        body: 'Prayer is our lifeline to God. It is not about eloquent words but about an honest heart. “Pray without ceasing” (1 Thessalonians 5:17).',
+        live: 'Spend 10 extra minutes in prayer today, listening for God’s voice.',
+        punchline: 'Prayer turns ordinary moments into holy encounters.',
+        discuss: 'What keeps you from praying more regularly?'
+      }, {
+        theme: 'Repentance',
+        body: 'Repentance is turning from sin and turning to God. It is the first step toward renewal. “Repent, for the kingdom of heaven is at hand” (Matthew 4:17).',
+        live: 'Confess one sin to God and accept His forgiveness fully.',
+        punchline: 'Repentance is the doorway to a new beginning.',
+        discuss: 'Why is repentance often seen as negative when it is so freeing?'
+      }, {
+        theme: 'Forgiveness',
+        body: 'Forgiveness releases the burden of bitterness. It mirrors the forgiveness we have received in Christ. “Be kind and compassionate to one another, forgiving each other, just as in Christ God forgave you” (Ephesians 4:32).',
+        live: 'Forgive someone who has hurt you, even if only in your heart.',
+        punchline: 'Forgiveness is the key that unlocks your own prison.',
+        discuss: 'What makes forgiveness so difficult?'
+      }, {
+        theme: 'Service',
+        body: 'Service is an expression of love. Jesus came to serve, not to be served. “For even the Son of Man did not come to be served, but to serve” (Mark 10:45).',
+        live: 'Find a practical way to serve someone in need today.',
+        punchline: 'Service is love in work clothes.',
+        discuss: 'How can we serve without seeking recognition?'
+      }, {
+        theme: 'Discipleship',
+        body: 'Discipleship is the journey of following Jesus daily. It involves learning, growing, and sharing. “Go and make disciples of all nations” (Matthew 28:19).',
+        live: 'Share something you’ve learned about Jesus with a friend.',
+        punchline: 'Discipleship is a walk, not a sprint.',
+        discuss: 'What does being a disciple look like in your daily life?'
+      }, {
+        theme: 'Sabbath',
+        body: 'The Sabbath is a gift of rest, a sign of our relationship with God, and a foretaste of eternity. “The Sabbath was made for man, not man for the Sabbath” (Mark 2:27).',
+        live: 'Set aside intentional time to rest and worship this Sabbath.',
+        punchline: 'Sabbath is a sanctuary in time.',
+        discuss: 'How can you make the Sabbath more meaningful?'
+      }, {
+        theme: 'Creation',
+        body: 'Creation reveals God’s power and love. We are stewards of His handiwork. “In the beginning God created the heavens and the earth” (Genesis 1:1).',
+        live: 'Spend time in nature and praise the Creator for His works.',
+        punchline: 'Creation is a love letter from the Creator.',
+        discuss: 'How does creation inspire your worship?'
+      }, {
+        theme: 'Second Coming',
+        body: 'Jesus is coming again to take us home. This hope shapes our lives and our witness. “Behold, I am coming soon” (Revelation 22:12).',
+        live: 'Live today with the confidence that Jesus is coming soon.',
+        punchline: 'His return is our blessed hope.',
+        discuss: 'How does the Second Coming influence your daily choices?'
+      }, {
+        theme: 'Sanctuary',
+        body: 'Christ is our High Priest, ministering in the heavenly sanctuary. His ministry brings cleansing and power. “We have a great high priest who has ascended into heaven” (Hebrews 4:14).',
+        live: 'Thank Jesus for His ongoing ministry on your behalf.',
+        punchline: 'The sanctuary reveals God’s plan of salvation.',
+        discuss: 'How does the sanctuary doctrine deepen your understanding of salvation?'
+      }, {
+        theme: 'Law',
+        body: 'God’s law is a reflection of His character. It guides us in the path of righteousness. “The law of the LORD is perfect, refreshing the soul” (Psalm 19:7).',
+        live: 'Meditate on one of the Ten Commandments and apply it today.',
+        punchline: 'The law is a lamp to our feet.',
+        discuss: 'How can we uphold the law without being legalistic?'
+      }];
 
-      const DEVOTION_TEMPLATES = [
-        {
-          theme: 'Grace',
-          body: 'God’s grace is unearned and boundless. It reaches us in our lowest moments and lifts us to new life.',
-          live: 'Reflect on a time you experienced grace. Share that story with someone today.',
-          punchline: 'Grace is the heartbeat of heaven, beating for you.',
-          discuss: 'How does grace change the way you see yourself?'
-        },
-        {
-          theme: 'Salvation',
-          body: 'Salvation is not a reward for good works but a gift received through faith in Jesus Christ.',
-          live: 'Thank God for the gift of salvation. Write a short prayer of gratitude.',
-          punchline: 'Saved by grace, kept by faith, sealed by love.',
-          discuss: 'What does it mean to live as a saved person?'
-        },
-        {
-          theme: 'Faith',
-          body: 'Faith is trusting God even when the path is unclear. It is the assurance of things hoped for.',
-          live: 'Take one step of faith today in an area you’ve been hesitant.',
-          punchline: 'Faith turns whispers into shouts of victory.',
-          discuss: 'What area of your life requires more faith?'
-        },
-        {
-          theme: 'Hope',
-          body: 'Hope anchors our soul in the promises of God. It looks beyond the present to the eternal.',
-          live: 'Encourage someone with a word of hope today.',
-          punchline: 'Hope is the dawn that breaks the darkest night.',
-          discuss: 'How does hope influence your daily decisions?'
-        },
-        {
-          theme: 'Love',
-          body: 'God’s love is unconditional and transformative. It compels us to love others as He has loved us.',
-          live: 'Perform an act of kindness for someone without expecting anything in return.',
-          punchline: 'Love is the language God speaks fluently.',
-          discuss: 'How can you love someone who is difficult to love?'
-        },
-        {
-          theme: 'Obedience',
-          body: 'Obedience is not legalism but love in action. Jesus said, "If you love me, keep my commandments."',
-          live: 'Identify one command of God you struggle with and commit to obeying it today.',
-          punchline: 'Obedience is the fruit of a heart that loves.',
-          discuss: 'Why is obedience often misunderstood as legalism?'
-        },
-        {
-          theme: 'Prayer',
-          body: 'Prayer is our lifeline to God. It is not about eloquent words but about an honest heart.',
-          live: 'Spend 10 extra minutes in prayer today, listening for God’s voice.',
-          punchline: 'Prayer turns ordinary moments into holy encounters.',
-          discuss: 'What keeps you from praying more regularly?'
-        },
-        {
-          theme: 'Repentance',
-          body: 'Repentance is turning from sin and turning to God. It is the first step toward renewal.',
-          live: 'Confess one sin to God and accept His forgiveness fully.',
-          punchline: 'Repentance is the doorway to a new beginning.',
-          discuss: 'Why is repentance often seen as negative when it is so freeing?'
-        },
-        {
-          theme: 'Forgiveness',
-          body: 'Forgiveness releases the burden of bitterness. It mirrors the forgiveness we have received in Christ.',
-          live: 'Forgive someone who has hurt you, even if only in your heart.',
-          punchline: 'Forgiveness is the key that unlocks your own prison.',
-          discuss: 'What makes forgiveness so difficult?'
-        },
-        {
-          theme: 'Service',
-          body: 'Service is an expression of love. Jesus came to serve, not to be served.',
-          live: 'Find a practical way to serve someone in need today.',
-          punchline: 'Service is love in work clothes.',
-          discuss: 'How can we serve without seeking recognition?'
-        },
-        {
-          theme: 'Discipleship',
-          body: 'Discipleship is the journey of following Jesus daily. It involves learning, growing, and sharing.',
-          live: 'Share something you’ve learned about Jesus with a friend.',
-          punchline: 'Discipleship is a walk, not a sprint.',
-          discuss: 'What does being a disciple look like in your daily life?'
-        },
-        {
-          theme: 'Sabbath',
-          body: 'The Sabbath is a gift of rest, a sign of our relationship with God, and a foretaste of eternity.',
-          live: 'Set aside intentional time to rest and worship this Sabbath.',
-          punchline: 'Sabbath is a sanctuary in time.',
-          discuss: 'How can you make the Sabbath more meaningful?'
-        },
-        {
-          theme: 'Creation',
-          body: 'Creation reveals God’s power and love. We are stewards of His handiwork.',
-          live: 'Spend time in nature and praise the Creator for His works.',
-          punchline: 'Creation is a love letter from the Creator.',
-          discuss: 'How does creation inspire your worship?'
-        },
-        {
-          theme: 'Second Coming',
-          body: 'Jesus is coming again to take us home. This hope shapes our lives and our witness.',
-          live: 'Live today with the confidence that Jesus is coming soon.',
-          punchline: 'His return is our blessed hope.',
-          discuss: 'How does the Second Coming influence your daily choices?'
-        },
-        {
-          theme: 'Sanctuary',
-          body: 'Christ is our High Priest, ministering in the heavenly sanctuary. His ministry brings cleansing and power.',
-          live: 'Thank Jesus for His ongoing ministry on your behalf.',
-          punchline: 'The sanctuary reveals God’s plan of salvation.',
-          discuss: 'How does the sanctuary doctrine deepen your understanding of salvation?'
-        },
-        {
-          theme: 'Law',
-          body: 'God’s law is a reflection of His character. It guides us in the path of righteousness.',
-          live: 'Meditate on one of the Ten Commandments and apply it today.',
-          punchline: 'The law is a lamp to our feet.',
-          discuss: 'How can we uphold the law without being legalistic?'
-        }
-      ];
-
-      function getDevotionForVerse(verseRef, verseText) {
-        // Pick a deterministic theme based on the verse reference
+      function getDevotionForVerse(verseRef) {
         const seed = verseRef.split(' ').join('').split(':').join('');
         let hash = 0;
         for (let i = 0; i < seed.length; i++) {
@@ -1266,16 +1252,7 @@
           hash = hash & hash;
         }
         const idx = Math.abs(hash) % DEVOTION_TEMPLATES.length;
-        const template = DEVOTION_TEMPLATES[idx];
-        // Optionally adapt to theme based on keywords in verse
-        // For simplicity we use the template as is
-        return {
-          theme: template.theme,
-          body: template.body,
-          live: template.live,
-          punchline: template.punchline,
-          discuss: template.discuss
-        };
+        return DEVOTION_TEMPLATES[idx];
       }
 
       // ─── RENDER HOME ────────────────────────────────────────────
@@ -1286,8 +1263,8 @@
             `<div class="card"><p>Unable to load verse. Please check your connection.</p><button class="btn btn-primary" onclick="location.reload()">Retry</button></div>`;
           return;
         }
-        const devotion = getDevotionForVerse(verse.ref, verse.text);
-        currentHomeData = { verse, devotion };
+        const devotion = getDevotionForVerse(verse.ref);
+        currentDevotion = devotion;
         const isSaved = savedItems.some(s => s.ref === verse.ref);
 
         homeContent.innerHTML = `
@@ -1305,7 +1282,6 @@
             <div class="btn-group">
               <button class="btn btn-outline" id="saveHomeBtn"><svg viewBox="0 0 24 24" width="18" height="18"><path d="M17 3H7c-1.1 0-2 .9-2 2v16l7-3 7 3V5c0-1.1-.9-2-2-2z"/></svg> ${isSaved?'Unsave':'Save'}</button>
               <button class="btn btn-outline" id="shareHomeBtn"><svg viewBox="0 0 24 24" width="18" height="18"><path d="M18 16.08c-.76 0-1.44.3-1.96.77L8.91 12.7c.05-.23.09-.46.09-.7s-.04-.47-.09-.7l7.05-4.11c.54.5 1.25.81 2.04.81 1.66 0 3-1.34 3-3s-1.34-3-3-3-3 1.34-3 3c0 .24.04.47.09.7L8.04 9.81C7.5 9.31 6.79 9 6 9c-1.66 0-3 1.34-3 3s1.34 3 3 3c.79 0 1.5-.31 2.04-.81l7.12 4.16c-.05.21-.08.43-.08.65 0 1.61 1.31 2.92 2.92 2.92 1.61 0 2.92-1.31 2.92-2.92s-1.31-2.92-2.92-2.92z"/></svg> Share</button>
-              <button class="btn btn-outline" id="newVerseHomeBtn">New Verse</button>
             </div>
           </div>
           <div class="card">
@@ -1319,18 +1295,10 @@
           </div>
         `;
 
-        // Event listeners for home buttons
         document.getElementById('saveHomeBtn').addEventListener('click', () => toggleSave(verse, devotion));
         document.getElementById('shareHomeBtn').addEventListener('click', () => shareDevotion(verse, devotion));
-        document.getElementById('newVerseHomeBtn').addEventListener('click', async () => {
-          // Clear daily and fetch new
-          localStorage.removeItem('verseflow_daily');
-          await renderHome();
-          showToast('New verse loaded!');
-        });
         document.getElementById('studyContextLink').addEventListener('click', (e) => {
           e.preventDefault();
-          // Navigate to Bible page and load the chapter
           const parts = verse.ref.split(' ');
           const bookName = parts.slice(0, -1).join(' ');
           const chapter = parts[parts.length - 1].split(':')[0];
@@ -1366,7 +1334,7 @@
           showToast('Saved!');
         }
         localStorage.setItem(SAVED_KEY, JSON.stringify(savedItems));
-        renderHome(); // refresh button state
+        renderHome();
         updateSavedBadge();
       }
 
@@ -1391,7 +1359,6 @@
           `;
           savedList.appendChild(div);
         });
-        // Attach events
         savedList.querySelectorAll('.remove-saved').forEach(btn => {
           btn.addEventListener('click', () => {
             const idx = parseInt(btn.dataset.idx);
@@ -1428,7 +1395,7 @@
           navigator.share({ title: 'VerseFlow', text }).catch(() => {});
         } else {
           navigator.clipboard.writeText(text).then(() => showToast('Copied to clipboard!')).catch(() => showToast(
-          'Unable to copy.'));
+            'Unable to copy.'));
         }
       }
 
@@ -1483,10 +1450,6 @@
             bibleSearchResults.querySelectorAll('.search-result').forEach(el => {
               el.addEventListener('click', () => {
                 const ref = el.dataset.ref;
-                // Load this verse on home
-                // We could navigate to home and show it, but for simplicity we'll just show a toast
-                // and load it in the reader if possible.
-                // Let's try to parse ref and load chapter
                 const parts = ref.split(' ');
                 const bookName = parts.slice(0, -1).join(' ');
                 const chv = parts[parts.length - 1].split(':');
@@ -1533,11 +1496,7 @@
         try {
           const data = await fetchRandom(currentTranslation);
           const verse = { ref: data.reference, text: data.text, translation: currentTranslation };
-          const devotion = getDevotionForVerse(verse.ref, verse.text);
-          // Show in home? We'll navigate to home and temporarily override daily verse.
-          // But we don't want to mess with daily storage. So we'll just display a card.
-          // We'll show a modal-like card in discover.
-          // We'll create a temporary card.
+          const devotion = getDevotionForVerse(verse.ref);
           const card = document.createElement('div');
           card.className = 'card card-verse mt-12';
           card.innerHTML = `
@@ -1550,12 +1509,10 @@
               <button class="btn btn-outline" id="tempShare">Share</button>
             </div>
           `;
-          // Insert after the study tools card
           const parent = randomVerseBtn.closest('.card');
           parent.parentNode.insertBefore(card, parent.nextSibling);
           card.querySelector('#tempSave').addEventListener('click', () => toggleSave(verse, devotion));
           card.querySelector('#tempShare').addEventListener('click', () => shareDevotion(verse, devotion));
-          // Auto-remove after navigation? We'll leave it.
           showToast('Random verse loaded!');
         } catch (e) {
           showToast('Error fetching random verse.');
@@ -1590,7 +1547,6 @@
       });
 
       // ─── SETTINGS ────────────────────────────────────────────────
-      // Theme toggle group
       themeToggleGroup.addEventListener('click', (e) => {
         const btn = e.target.closest('button');
         if (!btn) return;
@@ -1605,19 +1561,17 @@
         applyTheme(next);
       });
 
-      // Translation select
       translationSelect.addEventListener('change', () => {
         currentTranslation = translationSelect.value;
         localStorage.setItem('verseflow_translation', currentTranslation);
-        showToast('Translation changed. Reloading home…');
+        localStorage.removeItem(DAILY_KEY);
+        showToast('Translation changed. Reloading daily verse…');
         renderHome();
-        // also reload chapter if on bible page
         if (document.getElementById('page-bible').classList.contains('active')) {
           loadChapter();
         }
       });
 
-      // Clear saved
       clearAllBtn.addEventListener('click', () => {
         if (confirm('Clear all saved items?')) {
           savedItems = [];
@@ -1630,41 +1584,25 @@
 
       // ─── INIT ────────────────────────────────────────────────────
       async function init() {
-        // Load saved
         const saved = localStorage.getItem(SAVED_KEY);
         if (saved) {
           try { savedItems = JSON.parse(saved); } catch (e) { savedItems = []; }
         }
-        // Load translation
         const trans = localStorage.getItem('verseflow_translation');
         if (trans) currentTranslation = trans;
         translationSelect.value = currentTranslation;
 
-        // Theme
         initTheme();
-
-        // Populate Bible selectors
         populateBookSelect();
-
-        // Render beliefs
         renderBeliefs();
-
-        // Render home
         await renderHome();
-
-        // Load initial chapter
         loadChapter();
-
-        // Update saved badge
         updateSavedBadge();
 
-        // Navigation: if hash, go to that page
         const hash = window.location.hash.replace('#', '');
         if (hash && ['home', 'bible', 'discover', 'saved', 'settings'].includes(hash)) {
           navigateTo(hash);
         }
-
-        // Listen for hash changes
         window.addEventListener('hashchange', () => {
           const h = window.location.hash.replace('#', '');
           if (h && ['home', 'bible', 'discover', 'saved', 'settings'].includes(h)) {
@@ -1672,14 +1610,10 @@
           }
         });
 
-        console.log('🌊 VerseFlow ready!');
+        console.log('🌊 VerseFlow ready — Amazon Orange Edition');
       }
 
-      // ─── LOAD ────────────────────────────────────────────────────
       document.addEventListener('DOMContentLoaded', init);
-
-      // Re-run when going online/offline? not needed.
-
     })();
   </script>
 </body>
